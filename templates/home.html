@@ -1,0 +1,109 @@
+{% extends "index.html" %} {% block content %}
+<main
+  class="h-screen w-screen bg-base-200 md:h-[90vh] md:w-[90vw] md:rounded-md"
+>
+  <div class="flex flex-col md:flex-row h-full p-4 gap-4">
+    <div class="md:bg-base-100 min-w-72 md:h-full rounded-md">
+      <div class="drawer md:drawer-open flex flex-col max-h-full py-2 pl-2">
+        <input id="online-list" type="checkbox" class="drawer-toggle" />
+        <div class="drawer-content flex flex-col items-start justify-center">
+          <label
+            for="online-list"
+            class="flex gap-2 max-md:btn md:py-2 text-lg font-bold pl-2 cursor-pointer md:cursor-auto"
+          >
+            Online(s)
+            <span class="block w-7">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                class="bi bi-list"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"
+                /></svg
+            ></span>
+          </label>
+        </div>
+        <div
+          class="drawer-side z-10 max-h-full overflow-x-hidden overflow-y-scroll scrollbar-w-none md:scrollbar-w-auto md:pt-4 md:pr-4"
+        >
+          <label
+            for="online-list"
+            aria-label="close sidebar"
+            class="drawer-overlay"
+          ></label>
+          <ul
+            class="space-y-2 bg-base-100 p-4 md:p-0 min-w-72"
+            id="activity-people-list"
+          >
+            {% for i in 0..20 %}
+
+            <li>
+              <div class="collapse collapse-arrow bg-base-200">
+                <input type="radio" name="online-people" />
+                <div class="collapse-title text-lg font-medium">Anduin</div>
+                <div class="collapse-content">
+                  <div class="badge badge-accent">Activity</div>
+                </div>
+              </div>
+            </li>
+
+            {% endfor %}
+
+            <li><p class="text-sm text-base-content text-center">NO MORE</p></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex-grow rounded-md max-md:h-0">
+      <div
+        class="w-full h-full flex items-center justify-center"
+        id="bg-phaceholder"
+      >
+        <p class="text-3xl font-black -mt-10">NOBODY CHAT</p>
+      </div>
+      <div class="flex flex-col h-full space-y-2" id="chat-box">
+        <div class="p-4">
+          <span class="text-lg font-bold" id="chat-to">Chat to: Dvorak</span>
+        </div>
+        <div class="flex-grow overflow-y-scroll">
+          <ul class="px-4" id="bubble-list">
+            {% for i in 0..30 %}
+            <li>
+              <div class="chat chat-start">
+                <div class="chat-bubble">It's over Anakin,</div>
+              </div>
+            </li>
+
+            <li>
+              <div class="chat chat-end">
+                <div class="chat-bubble chat-bubble-primary">
+                  You underestimate my power!
+                </div>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        <form class="flex gap-2" id="send-message">
+          <input
+            type="text"
+            class="input input-bordered input-lg w-full"
+            id="new-message"
+            placeholder="type here, enter to send"
+            required
+          />
+          <button class="btn btn-primary h-full xl:btn-wide" type="submit">
+            Send
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %} {% block js %}
+<script src="/assets/js/home.js" defer></script>
+{% endblock %}

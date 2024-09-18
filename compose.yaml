@@ -1,0 +1,10 @@
+name: nobody-chat
+services:
+  server:
+    build:
+      context: .
+      target: final
+    ports:
+      - 3000:3000
+    environment:
+      - RUST_LOG=debug

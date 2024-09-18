@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .scrollbar-w-none {
+    scrollbar-width: none;
+  }
+
+  .scrollbar-w-auto {
+    scrollbar-width: auto;
+  }
+}

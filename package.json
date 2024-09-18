@@ -1,0 +1,15 @@
+{
+  "name": "nobody-chat",
+  "version": "1.0.0",
+  "author": "dvorakchen <dvorakchen@outlook.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "yarn tailwindcss -i ./input.css -o ./assets/css/styles.css --watch",
+    "build": "yarn tailwindcss -i ./input.css -o ./assets/css/styles.css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.15",
+    "daisyui": "^4.12.10",
+    "tailwindcss": "^3.4.11"
+  }
+}
