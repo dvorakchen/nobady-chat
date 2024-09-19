@@ -4,12 +4,17 @@
   "author": "dvorakchen <dvorakchen@outlook.com>",
   "license": "MIT",
   "scripts": {
-    "dev": "yarn tailwindcss -i ./input.css -o ./assets/css/styles.css --watch",
-    "build": "yarn tailwindcss -i ./input.css -o ./assets/css/styles.css --minify"
+    "dev": "run-p dev:*",
+    "dev:css": "tailwindcss -i ./input.css -o ./assets/css/styles.css --watch",
+    "dev:server": "cargo r -- -a 0.0.0.0:3000",
+    "build": "run-s build:*",
+    "build:css": "tailwindcss -i ./input.css -o ./assets/css/styles.css --minify",
+    "build:server": "cargo b --release"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.15",
     "daisyui": "^4.12.10",
+    "npm-run-all": "^4.1.5",
     "tailwindcss": "^3.4.11"
   }
 }

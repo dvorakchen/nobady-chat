@@ -1,2 +1,6 @@
 /target
 /node_modules
+/assets/css/styles.css
+/Dockerfile
+/README.md
+/Licence
