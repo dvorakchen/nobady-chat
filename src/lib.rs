@@ -1,8 +1,11 @@
-use std::io;
+use std::{io, net::SocketAddr};
 
-use crate::routes::home::index;
-use axum::{routing::get, Router};
+use crate::routes::home::{index, user_connection};
+use axum::{routing::get, Extension, Router};
+use chat::ChatRoom;
+use kameo::actor::ActorRef;
 
+mod chat;
 pub mod routes;
 
 pub struct App {
@@ -17,7 +20,7 @@ impl App {
     }
 
     pub async fn run(&self) -> io::Result<()> {
-        let routes = Self::build_routes();
+        let routes = Self::build_routes().into_make_service_with_connect_info::<SocketAddr>();
 
         let listener = tokio::net::TcpListener::bind(self.addr.clone())
             .await
@@ -29,11 +32,13 @@ impl App {
     fn build_routes() -> Router {
         let app = Router::new()
             .route("/", get(index))
+            .route("/ws", get(user_connection))
             .nest_service("/assets", tower_http::services::ServeDir::new("assets"))
             .nest_service(
                 "/favicon.ico",
                 tower_http::services::ServeFile::new("assets/favicon.ico"),
-            );
+            )
+            .layer(Extension(chat_room_extension()));
 
         #[cfg(debug_assertions)]
         let app = Self::hot_reload(app);
@@ -73,4 +78,8 @@ impl App {
 
         route
     }
+}
+
+fn chat_room_extension() -> ActorRef<ChatRoom> {
+    ChatRoom::new()
 }
