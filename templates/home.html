@@ -36,14 +36,14 @@
           ></label>
           <ul
             class="space-y-2 bg-base-100 p-4 md:p-0 min-w-72"
-            id="activity-people-list"
+            id="online-user-list"
           >
-            {% for i in 0..20 %}
+            {% for (id, name) in all_users %}
 
             <li>
               <div class="collapse collapse-arrow bg-base-200">
-                <input type="radio" name="online-people" />
-                <div class="collapse-title text-lg font-medium">Anduin</div>
+                <input type="radio" name="online-user" data-userId="{{ id }}" />
+                <div class="collapse-title text-lg font-medium">{{ name }}</div>
                 <div class="collapse-content">
                   <div class="badge badge-accent">Activity</div>
                 </div>
@@ -52,7 +52,9 @@
 
             {% endfor %}
 
-            <li><p class="text-sm text-base-content text-center">NO MORE</p></li>
+            <li>
+              <p class="text-sm text-base-content text-center">NO MORE</p>
+            </li>
           </ul>
         </div>
       </div>

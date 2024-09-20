@@ -7,10 +7,10 @@ use axum::{
     Extension,
 };
 use axum_extra::{headers, TypedHeader};
-use kameo::actor::ActorRef;
+use kameo::{actor::ActorRef, request::MessageSend};
 use log::info;
 
-use crate::chat::ChatRoom;
+use crate::chat::{AllActivityUsers, ChatRoom, User, UserId};
 
 // use crate::chat::ChatRoomBox;
 
@@ -18,11 +18,17 @@ use crate::chat::ChatRoom;
 #[template(path = "home.html")]
 pub struct HomePageTemplate<'a> {
     pub welcome: &'a str,
+    pub all_users: Vec<(UserId, String)>,
 }
 
-pub async fn index() -> HomePageTemplate<'static> {
+pub async fn index(
+    Extension(chat_room): Extension<ActorRef<ChatRoom>>,
+) -> HomePageTemplate<'static> {
+    let list = chat_room.ask(AllActivityUsers).send().await.unwrap();
+
     HomePageTemplate {
         welcome: "Welcome Nobody Chat",
+        all_users: list,
     }
 }
 
@@ -51,7 +57,5 @@ pub async fn user_connection(
 }
 
 async fn append_new_connection(ws: WebSocket, chat_room: ActorRef<ChatRoom>) {
-    use log::debug;
-
-    debug!("accpetd ws");
+    let _ = User::new_actor(ws, chat_room).await;
 }
