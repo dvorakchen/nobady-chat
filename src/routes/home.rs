@@ -40,7 +40,7 @@ pub async fn user_connection(
     // body: String,
 ) -> impl IntoResponse {
     const UNKNOW_BROWSER: &str = "Unknown browser";
-
+print!("");
     let user_agent = if let Some(TypedHeader(user_agent)) = user_agent {
         user_agent.to_string()
     } else {

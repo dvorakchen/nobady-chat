@@ -1,9 +1,11 @@
-use std::{io, net::SocketAddr};
+use std::{env, io, net::SocketAddr};
 
 use crate::routes::home::{index, user_connection};
 use axum::{routing::get, Extension, Router};
 use chat::ChatRoom;
 use kameo::actor::ActorRef;
+use log::debug;
+use tokio::net::TcpListener;
 
 mod chat;
 pub mod routes;
@@ -22,9 +24,25 @@ impl App {
     pub async fn run(&self) -> io::Result<()> {
         let routes = Self::build_routes().into_make_service_with_connect_info::<SocketAddr>();
 
-        let listener = tokio::net::TcpListener::bind(self.addr.clone())
-            .await
-            .unwrap();
+        let listener = if cfg!(debug_assertions) {
+            debug!("Debug environment");
+
+            use listenfd::ListenFd;
+            let mut listenfd = ListenFd::from_env();
+            match listenfd.take_tcp_listener(0).unwrap() {
+                // if we are given a tcp listener on listen fd 0, we use that one
+                Some(listener) => {
+                    debug!("Hot Reloading");
+                    listener.set_nonblocking(true).unwrap();
+                    TcpListener::from_std(listener).unwrap()
+                }
+                // otherwise fall back to local listening
+                None => TcpListener::bind(self.addr.clone()).await.unwrap(),
+            }
+        } else {
+            TcpListener::bind(self.addr.clone()).await.unwrap()
+        };
+
         axum::serve(listener, routes).await
     }
 
@@ -40,43 +58,10 @@ impl App {
             )
             .layer(Extension(chat_room_extension()));
 
-        #[cfg(debug_assertions)]
-        let app = Self::hot_reload(app);
+        // #[cfg(debug_assertions)]
+        // let app = Self::hot_reload(app);
 
         app
-    }
-
-    #[cfg(debug_assertions)]
-    fn hot_reload(route: Router) -> Router {
-        use log::trace;
-
-        let route = {
-            use notify::Watcher;
-            let livereload = tower_livereload::LiveReloadLayer::new().request_predicate(
-                |req: &axum::http::Request<axum::body::Body>| {
-                    !req.headers().contains_key("hx-request")
-                },
-            );
-            let reloader = livereload.reloader();
-            let mut watcher = notify::recommended_watcher(move |_| reloader.reload()).unwrap();
-            watcher
-                .watch(
-                    std::path::Path::new("assets"),
-                    notify::RecursiveMode::Recursive,
-                )
-                .unwrap();
-            watcher
-                .watch(
-                    std::path::Path::new("templates"),
-                    notify::RecursiveMode::Recursive,
-                )
-                .unwrap();
-            trace!("Enableing hot-reload");
-
-            route.layer(livereload)
-        };
-
-        route
     }
 }
 

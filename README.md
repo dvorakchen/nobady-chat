@@ -8,6 +8,8 @@ Nobody here, not compeleted yet
 
 You should have the Rust toolchain and npm
 
+For Hot-Reload, install `cargo install systemfd cargo-watch`
+
 ```bash
 $:npm run dev
 #or
@@ -31,4 +33,3 @@ docker compose up -d
 ```
 
 open broswer with 0.0.0.0:3000
-

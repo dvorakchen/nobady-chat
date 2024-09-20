@@ -23,6 +23,4 @@ tower-http = { version = "0.5.2", features = ["fs"] }
 tower-livereload = "0.9.3"
 uuid = { version = "1.10.0", features = ["v4"] }
 
-[dev-dependencies]
-notify = "6.1.1"
-tower-livereload = "0.9.3"
+listenfd = "1.0.1"

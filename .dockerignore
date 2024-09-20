@@ -2,5 +2,7 @@
 /node_modules
 /assets/css/styles.css
 /Dockerfile
+/compose.yaml
 /README.md
 /Licence
+/.vscode
