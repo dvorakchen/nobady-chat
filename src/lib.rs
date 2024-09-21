@@ -1,9 +1,8 @@
-use std::{env, io, net::SocketAddr};
+use std::{io, net::SocketAddr};
 
 use crate::routes::home::{index, user_connection};
 use axum::{routing::get, Extension, Router};
 use chat::ChatRoom;
-use kameo::actor::ActorRef;
 use log::debug;
 use tokio::net::TcpListener;
 
@@ -46,7 +45,6 @@ impl App {
         axum::serve(listener, routes).await
     }
 
-    // #[cfg(not(debug_assertions))]
     fn build_routes() -> Router {
         let app = Router::new()
             .route("/", get(index))
@@ -56,15 +54,8 @@ impl App {
                 "/favicon.ico",
                 tower_http::services::ServeFile::new("assets/favicon.ico"),
             )
-            .layer(Extension(chat_room_extension()));
-
-        // #[cfg(debug_assertions)]
-        // let app = Self::hot_reload(app);
+            .layer(Extension(ChatRoom::new()));
 
         app
     }
-}
-
-fn chat_room_extension() -> ActorRef<ChatRoom> {
-    ChatRoom::new()
 }

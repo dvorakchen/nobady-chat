@@ -1,4 +1,4 @@
-ARG RUST_VERSION=1.80.1
+ARG RUST_VERSION=1.81
 ARG APP_NAME=nobody-chat
 
 # cache npm
@@ -6,18 +6,20 @@ FROM hub.aiursoft.cn/node:latest as npm-env
 
 WORKDIR /app
 
+RUN yarn config set registry http://registry.npm.taobao.org/
+
 COPY ./package.json ./package.json
-COPY ./yarn.lock ./yarn.lock
+
+RUN yarn
+
 COPY ./input.css ./input.css
 COPY ./assets ./assets
 COPY ./templates ./templates
 COPY ./tailwind.config.js ./tailwind.config.js
 
-RUN yarn
-
 RUN yarn build:css
 
-FROM hub.aiursoft.cn/rust:1.74.1 AS rust-build
+FROM dockerproxy.cn/rust:${RUST_VERSION}-slim-bullseye AS rust-build
 LABEL author="DvorakChen"
 LABEL email="dvorakchen@outlook.com"
 
@@ -40,7 +42,7 @@ COPY . .
 
 RUN cargo build --release 
 
-FROM hub.aiursoft.cn/debian:12 AS final
+FROM dockerproxy.cn/debian:bullseye-slim AS final
 
 ARG APP_NAME
 

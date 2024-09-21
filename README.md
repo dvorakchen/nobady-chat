@@ -4,6 +4,10 @@ It's just a Chat room
 
 Nobody here, not compeleted yet
 
+# Prerequisite
+
+You should have the latest Rust toolchain and npm/yarn
+
 # Dev
 
 You should have the Rust toolchain and npm
