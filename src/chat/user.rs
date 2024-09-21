@@ -8,7 +8,7 @@ use kameo::{
     request::MessageSend,
     Actor,
 };
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 use serde_json::json;
 use uuid::Uuid;
 
@@ -53,17 +53,10 @@ impl Actor for User {
         _actor_ref: kameo::actor::WeakActorRef<Self>,
         reason: kameo::error::ActorStopReason,
     ) -> Result<(), kameo::error::BoxError> {
-        error!("user id: {} stopped, error: {:?}", self.id, reason);
+        warn!("user id: {} stopped, error: {:?}", self.id, reason);
 
         // close websocket
         let _ = self.sender.close().await;
-
-        // tell the chat room release the user connection
-        self.chat_room
-            .tell(UserDisconnection(self.get_id()))
-            .send()
-            .await
-            .map_err(|e| Box::new(e))?;
 
         Ok(())
     }
