@@ -12,9 +12,12 @@ use log::{debug, error, info};
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::chat::{models::SendData, UserDisconnection};
+use crate::chat::{models::SendData, SendMsg, UserDisconnection};
 
-use super::{ChatRoom, NewUserConnection, UserOnline};
+use super::{
+    models::{RecvData, RecvDataType},
+    ChatRoom, NewUserConnection, UserOnline,
+};
 
 pub type UserId = String;
 
@@ -170,7 +173,29 @@ impl User {
         self.sender.send(WsMessage::Text(data)).await.unwrap();
     }
 
-    async fn handle_recv_msg(&self, raw_msg: String) {}
+    async fn handle_recv_msg(&self, raw_msg: String) {
+        if let Ok(data) = serde_json::from_str::<'_, RecvData>(&raw_msg) {
+            match data.msg_type {
+                RecvDataType::TalkTo { to, msg } => self.send_msg_to_user(to, msg).await,
+            }
+        } else {
+            error!("received unknow data: {raw_msg}");
+        }
+    }
+
+    async fn send_msg_to_user(&self, to: UserId, msg: String) {
+        debug!("rece: to: {to}, msg: {msg}");
+
+        self.chat_room
+            .tell(SendMsg {
+                from: self.get_id(),
+                to,
+                msg,
+            })
+            .send()
+            .await
+            .unwrap();
+    }
 }
 
 impl Message<UserOnline> for User {
@@ -197,6 +222,26 @@ impl Message<UserDisconnection> for User {
         _ctx: kameo::message::Context<'_, Self, Self::Reply>,
     ) -> Self::Reply {
         let data = SendData::new_user_offline(msg.0);
+        let data = json!(data).to_string();
+
+        self.sender.send(WsMessage::Text(data)).await.unwrap();
+    }
+}
+
+pub struct NewMsg {
+    pub from: UserId,
+    pub msg: String,
+}
+
+impl Message<NewMsg> for User {
+    type Reply = ();
+
+    async fn handle(
+        &mut self,
+        msg: NewMsg,
+        _ctx: kameo::message::Context<'_, Self, Self::Reply>,
+    ) -> Self::Reply {
+        let data = SendData::new_msg(msg.msg, msg.from);
         let data = json!(data).to_string();
 
         self.sender.send(WsMessage::Text(data)).await.unwrap();

@@ -42,7 +42,12 @@
 
             <li>
               <div class="collapse collapse-arrow bg-base-200">
-                <input type="radio" name="online-user" data-userId="{{ id }}" />
+                <input
+                  type="radio"
+                  name="online-user"
+                  data-userid="{{ id }}"
+                  data-username="{{ name }}"
+                />
                 <div class="collapse-title text-lg font-medium">{{ name }}</div>
                 <div class="collapse-content">
                   <div class="badge badge-accent">Activity</div>
@@ -66,26 +71,13 @@
       </div>
       <div class="flex flex-col h-full space-y-2" id="chat-box">
         <div class="p-4">
-          <span class="text-lg font-bold" id="chat-to">Chat to: Dvorak</span>
+          <span class="text-lg font-bold" id="chat-to"
+            >Chat to:
+            <span id="talkTo"></span>
+          </span>
         </div>
         <div class="flex-grow overflow-y-scroll">
-          <ul class="px-4" id="bubble-list">
-            {% for i in 0..30 %}
-            <li>
-              <div class="chat chat-start">
-                <div class="chat-bubble">It's over Anakin,</div>
-              </div>
-            </li>
-
-            <li>
-              <div class="chat chat-end">
-                <div class="chat-bubble chat-bubble-primary">
-                  You underestimate my power!
-                </div>
-              </div>
-            </li>
-            {% endfor %}
-          </ul>
+          <ul class="px-4" id="bubble-list"></ul>
         </div>
         <form class="flex gap-2" id="send-message">
           <input

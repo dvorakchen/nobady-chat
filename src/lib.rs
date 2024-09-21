@@ -4,6 +4,7 @@ use crate::routes::home::{index, user_connection};
 use axum::{routing::get, Extension, Router};
 use chat::ChatRoom;
 use log::debug;
+use routes::not_found::not_found;
 use tokio::net::TcpListener;
 
 mod chat;
@@ -47,6 +48,7 @@ impl App {
 
     fn build_routes() -> Router {
         let app = Router::new()
+            .fallback(not_found)
             .route("/", get(index))
             .route("/ws", get(user_connection))
             .nest_service("/assets", tower_http::services::ServeDir::new("assets"))

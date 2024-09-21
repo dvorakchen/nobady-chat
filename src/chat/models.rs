@@ -43,11 +43,12 @@ impl SendData {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum RecvDataType {
     TalkTo { to: UserId, msg: String },
 }
 
 #[derive(Deserialize)]
 pub struct RecvData {
-    msg_type: RecvDataType,
+    pub msg_type: RecvDataType,
 }

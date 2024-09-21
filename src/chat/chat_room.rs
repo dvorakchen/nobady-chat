@@ -1,7 +1,12 @@
 use std::collections::HashMap;
 
-use super::{UserId, UserRef};
-use kameo::{actor::ActorRef, message::Message, request::MessageSendSync, Actor};
+use super::{NewMsg, UserId, UserRef};
+use kameo::{
+    actor::ActorRef,
+    message::Message,
+    request::{MessageSend, MessageSendSync},
+    Actor,
+};
 use log::debug;
 
 #[derive(Actor)]
@@ -96,5 +101,32 @@ impl Message<UserOnline> for ChatRoom {
                 debug!("found id: {}, msg id: {}", id, msg.0);
                 user_ref.actor_ref.tell(msg.clone()).send_sync().unwrap();
             });
+    }
+}
+
+pub struct SendMsg {
+    pub from: UserId,
+    pub to: UserId,
+    pub msg: String,
+}
+
+impl Message<SendMsg> for ChatRoom {
+    type Reply = ();
+
+    async fn handle(
+        &mut self,
+        msg: SendMsg,
+        _ctx: kameo::message::Context<'_, Self, Self::Reply>,
+    ) -> Self::Reply {
+        if let Some(to_user) = self.activity_users.get_mut(&msg.to) {
+            let _ = to_user
+                .actor_ref
+                .tell(NewMsg {
+                    from: msg.from,
+                    msg: msg.msg,
+                })
+                .send()
+                .await;
+        }
     }
 }
