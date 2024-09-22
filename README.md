@@ -38,4 +38,5 @@ docker compose up -d
 
 open broswer with 0.0.0.0:3000, then you would see:
 
-![Screenshot]("https://github.com/dvorakchen/nobody-chat/docs/screenshot.jpg")
+![1726999287740](https://github.com/user-attachments/assets/0a1fb78e-2b0d-4b46-8841-76b7cc10ee91)
+
