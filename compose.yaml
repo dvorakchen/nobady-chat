@@ -7,4 +7,4 @@ services:
     ports:
       - 3000:3000
     environment:
-      - RUST_LOG=debug
+      - RUST_LOG=info

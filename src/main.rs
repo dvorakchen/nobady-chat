@@ -1,5 +1,5 @@
 use clap::Parser;
-use log::info;
+use log::{debug, info};
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -12,6 +12,7 @@ struct Args {
 #[tokio::main]
 async fn main() {
     if cfg!(debug_assertions) {
+        debug!("Dev mode");
         dotenv::dotenv().ok();
     }
 

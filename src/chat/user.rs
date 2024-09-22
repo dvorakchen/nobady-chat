@@ -74,7 +74,7 @@ impl Message<StreamMessage<Result<WsMessage, axum::Error>, (), ()>> for User {
 
         match msg {
             StreamMessage::Started(()) => {
-                info!("Started");
+                info!("user id: {} started", self.id);
                 self.connection_started().await;
             }
             StreamMessage::Finished(()) => {
@@ -89,7 +89,7 @@ impl Message<StreamMessage<Result<WsMessage, axum::Error>, (), ()>> for User {
                 ctx.actor_ref().kill();
             }
             StreamMessage::Next(Ok(message)) => {
-                info!("{:?}", message);
+                debug!("{:?}", message);
                 match message {
                     WsMessage::Text(raw_msg) => self.handle_recv_msg(raw_msg).await,
                     _ => {}
