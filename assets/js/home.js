@@ -149,7 +149,9 @@ function buildTheirBubble(message) {
   return li;
 }
 
-const socket = new WebSocket(`ws://${window.location.host}/ws`);
+const socket = new WebSocket(
+  `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`
+);
 
 socket.addEventListener("open", function (event) {
   // socket.send("Hello Server!");
