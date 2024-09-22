@@ -38,4 +38,4 @@ docker compose up -d
 
 open broswer with 0.0.0.0:3000, then you would see:
 
-![Screenshot]("https://github.com/dvorakchen/nobody-chat/blob/master/docs/screenshot.jpg?raw=true")
+![Screenshot]("https://github.com/dvorakchen/nobody-chat/docs/screenshot.jpg")
