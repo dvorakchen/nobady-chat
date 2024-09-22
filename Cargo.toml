@@ -2,6 +2,9 @@
 name = "nobody-chat"
 version = "0.1.0"
 edition = "2021"
+description = "a simple chat room, anoymous without login"
+license = "MIT"
+repository = "https://github.com/dvorakchen/nobody-chat"
 
 [dependencies]
 askama = { version = "0.12.1", features = ["with-axum"] }
