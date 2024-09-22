@@ -154,10 +154,8 @@ const socket = new WebSocket(
 );
 
 socket.addEventListener("open", function (event) {
-  // socket.send("Hello Server!");
 });
 
-// Listen for messages
 socket.addEventListener("message", function (event) {
   let data = JSON.parse(event.data);
 
@@ -170,8 +168,6 @@ socket.addEventListener("message", function (event) {
   } else if (data.msg_type.userOffline) {
     removeUser(data.msg_type.userOffline.id);
   }
-
-  console.log("Message from server ", data);
 });
 
 function removeUser(userId) {
