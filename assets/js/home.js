@@ -48,7 +48,11 @@ let user = new User();
 
 onlineUserList.addEventListener("click", (ev) => {
   const target = ev.target;
-  if (target.nodeName !== "INPUT" || target.name !== "online-user") {
+  if (
+    target.nodeName !== "INPUT" ||
+    target.name !== "online-user" ||
+    target.dataset.userid === user.talkTo
+  ) {
     return;
   }
 
@@ -56,9 +60,29 @@ onlineUserList.addEventListener("click", (ev) => {
   user.talkTo = target.dataset.userid;
 
   talkTo.textContent = talkToName;
+  talkTo.dataset.userid = user.talkTo;
 
+  bubbleList.replaceChildren();
   bgPlaceholder.style.display = "none";
   chatBox.style.display = "flex";
+
+  const records = historyRecord.get(user.talkTo);
+  if (records !== undefined && records.length !== 0) {
+    records.forEach((record) => {
+      let bubble;
+      if (record[0] === null) {
+        bubble = buildMyBubble(record[1]);
+      } else {
+        bubble = buildTheirBubble(record[0]);
+      }
+
+      appendBubble(bubble);
+    });
+  }
+
+  const userEle = document.querySelector(`li [data-unread='${user.talkTo}']`);
+  userEle.classList.add("hidden");
+  userEle.textContent = "";
 });
 
 messageForm.onsubmit = (ev) => {
@@ -80,12 +104,24 @@ messageForm.onsubmit = (ev) => {
   );
 
   let msg = buildMyBubble(newMsg);
-  bubbleList.appendChild(msg);
-  msg.scrollIntoView({
+  appendBubble(msg);
+
+  let record = historyRecord.get(user.talkTo);
+  if (record === undefined) {
+    record = [];
+    historyRecord.set(user.talkTo, record);
+  }
+  record.push([null, newMsg]);
+
+  newMessage.value = "";
+};
+
+function appendBubble(bubble) {
+  bubbleList.appendChild(bubble);
+  bubble.scrollIntoView({
     behavior: "smooth",
   });
-  newMessage.value = '';
-};
+}
 
 function buildMyBubble(message) {
   let li = document.createElement("li");
@@ -129,10 +165,25 @@ socket.addEventListener("message", function (event) {
     appendNewUserOnline(data.msg_type.userOnline);
   } else if (data.msg_type.msg) {
     appendReceivedNewMsg(data.msg_type.msg.from, data.msg_type.msg.msg);
+  } else if (data.msg_type.userOffline) {
+    removeUser(data.msg_type.userOffline.id);
   }
 
   console.log("Message from server ", data);
 });
+
+function removeUser(userId) {
+  if (userId === user.id) {
+    return;
+  }
+
+  let userLi = document.querySelector(
+    `li[name="online-user"][data-userid="${userId}"]`
+  );
+  if (userLi !== null) {
+    userLi.remove();
+  }
+}
 
 function appendReceivedNewMsg(from, msg) {
   let records = historyRecord.get(from);
@@ -178,9 +229,10 @@ function appendNewUserOnline(newUser) {
       type="radio"
       name="online-user"
       data-userId="${newUser.id}"
+      data-username="${newUser.name}"
     />
     <div class="collapse-title text-lg font-medium">${newUser.name}
-    <div class="badge badge-accent hidden" data-unread=${newUser.id}></div>
+      <div class="badge badge-accent hidden" data-unread=${newUser.id}></div>
     </div>
     <div class="collapse-content">
       <div class="badge badge-accent">Activity</div>
@@ -192,7 +244,8 @@ function appendNewUserOnline(newUser) {
   <div class="collapse bg-base-200">
     <input
       type="radio"
-      data-userId="${newUser.id}"
+      data-userid="${newUser.id}"
+      data-username="${newUser.name}"
     />
     <div class="collapse-title text-lg font-medium">${newUser.name}
       <div class="badge badge-accent">You</div>
@@ -201,6 +254,8 @@ function appendNewUserOnline(newUser) {
   `;
 
   const li = document.createElement("li");
+  li.setAttribute("name", "online-user");
+  li.setAttribute("data-userid", newUser.id);
 
   li.innerHTML = own ? ownTemplate : template;
 

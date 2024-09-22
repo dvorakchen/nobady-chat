@@ -199,6 +199,10 @@ impl Message<UserOnline> for User {
         msg: UserOnline,
         _ctx: kameo::message::Context<'_, Self, Self::Reply>,
     ) -> Self::Reply {
+        if msg.0 == self.id {
+            return;
+        }
+
         let data = SendData::new_user_online(msg.0, msg.1);
         let data = json!(data).to_string();
 
@@ -214,6 +218,10 @@ impl Message<UserDisconnection> for User {
         msg: UserDisconnection,
         _ctx: kameo::message::Context<'_, Self, Self::Reply>,
     ) -> Self::Reply {
+        if msg.0 == self.id {
+            return;
+        }
+
         let data = SendData::new_user_offline(msg.0);
         let data = json!(data).to_string();
 
