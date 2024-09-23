@@ -265,3 +265,7 @@ function appendNewUserOnline(newUser) {
 }
 
 chatBox.style.display = "none";
+
+if (/iPhone/.test(navigator.userAgent)) {
+  document.getElementById('chat-main').style.paddingBottom = '30px';
+}
