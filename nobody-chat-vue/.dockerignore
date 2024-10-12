@@ -1,0 +1,10 @@
+/target
+/node_modules
+/src/assets/main.css
+/Dockerfile
+/compose.yaml
+/README.md
+/Licence
+/.vscode
+/docs
+/dist

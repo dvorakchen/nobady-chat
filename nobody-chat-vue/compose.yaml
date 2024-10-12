@@ -1,0 +1,12 @@
+name: nobody-chat-vue
+services:
+  server:
+    build:
+      context: .
+      target: final
+    container_name: nobody-chat-vue
+    restart: unless-stopped
+    ports:
+      - 3001:80
+    environment:
+      - VITE_API_ADDRESS="localhost:3000/"

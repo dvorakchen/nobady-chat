@@ -1,0 +1,13 @@
+name: nobody-chat-server
+services:
+  server:
+    build:
+      context: .
+      target: final
+    container_name: nobody-chat-server
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    environment:
+      - RUST_LOG=info
+      - ALLOW_URLS=[\"http://127.0.0.1:5173\"]
