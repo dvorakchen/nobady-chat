@@ -1,21 +1,21 @@
 <script setup lang="ts">
 const { id, name, unread } = defineProps(['id', 'name', 'unread'])
 
-import { computed, inject } from 'vue'
+import { computed } from 'vue'
 
-import { provideKey } from '@/stores/chat_state';
-import type { OnlineUserModel } from '@/http';
+import { useChatState, User } from '@/stores/chat_state';
 
-let chatState: any = inject(provideKey)!;
+let chatState = useChatState();
 
 const isOwn = computed(() => {
-    return chatState?.user?.value?.id === id;
+    return chatState?.user?.id === id;
 })
 function handleClickUser() {
-    if (isOwn.value) {
+    if (isOwn.value || chatState.talkTo?.id === id) {
         return;
     }
-    chatState.talkTo({ id, name } as OnlineUserModel);
+
+    chatState.setTalkTo({ id, name } as User);
 }
 
 </script>

@@ -1,8 +1,6 @@
 import { newConnection, type OnlineUserModel } from '@/http'
 import { defineStore } from 'pinia'
-import { ref, type Ref } from 'vue'
-
-export const provideKey = Symbol()
+import { ref, nextTick } from 'vue'
 
 export type HistoryRecord = [string, string]
 export class HistoryRecords {
@@ -19,19 +17,6 @@ export class HistoryRecords {
   }
 }
 
-export type ChatStateModel = {
-  sockect: WebSocket
-  historyRecords: HistoryRecords
-  onlineUsers: Ref<OnlineUserModel[], OnlineUserModel[]>
-  currentChat: Ref<OnlineUserModel | null, OnlineUserModel | null>
-  user: User
-  currentRecords: Ref<HistoryRecord[]>
-
-  setCurrentChat: (value: OnlineUserModel) => {}
-  talkTo: (user: OnlineUserModel) => {}
-  sendNewMsg: (to: string, msg: string) => {}
-}
-
 export const useChatState = defineStore('chatState', {
   state: () => ({
     socket: newConnection(),
@@ -39,7 +24,8 @@ export const useChatState = defineStore('chatState', {
     onlineUsers: ref<OnlineUserModel[]>([]),
     currentChat: ref<OnlineUserModel | null>(null),
     user: ref<User>(new User()),
-    currentRecords: ref<HistoryRecord[]>([])
+    currentRecords: ref<HistoryRecord[]>([]),
+    talkTo: ref<User | null>(null)
   }),
   actions: {
     setCurrentChat(value: OnlineUserModel) {
@@ -66,9 +52,7 @@ export const useChatState = defineStore('chatState', {
       let record = this.historyRecords.get(fromId)
       record.push([msg, ''])
 
-      if (this.user.talkTo?.id === fromId) {
-        this.currentRecords.push([msg, ''])
-      } else {
+      if (this.talkTo?.id !== fromId) {
         let user = this.onlineUsers.find((e) => e.id === fromId)
         if (user) {
           if (isNaN(user.unread)) {
@@ -77,24 +61,32 @@ export const useChatState = defineStore('chatState', {
           user.unread += 1
         }
       }
+
+      nextTick(() => {
+        let list = document.getElementById('bubbleList')
+        if (list?.children?.length ?? 0 > 0) {
+          list?.children[list.children.length! - 1].scrollIntoView({
+            behavior: 'smooth'
+          })
+        }
+      })
     },
     removeUser(id: string) {
-      if (this.user.talkTo?.id ?? '' === id) {
-        this.user.talkTo = null
+      if (this.talkTo?.id ?? '' === id) {
+        this.talkTo = null
       }
       this.onlineUsers = this.onlineUsers.filter((e) => e.id !== id)
     },
-    talkTo(user: OnlineUserModel) {
+    setTalkTo(user: User) {
       console.log('in talkTo pinia, user: ', user)
-      this.user.talkTo = user
-      console.log('this.user.talkTo: ', this.user.talkTo)
+      this.talkTo = user
+      console.log('this.talkTo: ', this.talkTo)
       this.currentRecords = this.historyRecords.get(user.id)
       let tmpUser = this.onlineUsers.find((e) => e.id === user.id)
       tmpUser && (tmpUser.unread = 0)
     },
     sendNewMsg(to: string, msg: string) {
       this.historyRecords.get(to).push(['', msg])
-      this.currentRecords.push(['', msg])
     }
   }
 })
@@ -102,5 +94,4 @@ export const useChatState = defineStore('chatState', {
 export class User {
   id = ''
   name = ''
-  talkTo: OnlineUserModel | null = null
 }

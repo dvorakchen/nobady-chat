@@ -3,13 +3,12 @@ import { onMounted, provide, readonly } from 'vue'
 import { getOnlineUsers, type WsRecvData } from '@/http'
 import OnlineUser from '@/components/OnlineUser.vue'
 import ChatBubbleBox from '@/components/ChatBubbleBox.vue'
-import { useChatState, provideKey } from '@/stores/chat_state'
+import { useChatState } from '@/stores/chat_state'
 
 
 let socket: WebSocket;
 
 const chatState = useChatState();
-provide(provideKey, readonly(chatState));
 
 onMounted(async () => {
   socket = chatState.socket;
@@ -32,11 +31,11 @@ onMounted(async () => {
 })
 
 function handleSentMsg(msg: string) {
-  if (chatState.user.talkTo !== null) {
+  if (chatState.talkTo !== null) {
     chatState.socket.send(JSON.stringify({
       msg_type: {
         talkTo: {
-          to: chatState.user.talkTo?.id,
+          to: chatState.talkTo?.id,
           msg: msg,
         },
       },

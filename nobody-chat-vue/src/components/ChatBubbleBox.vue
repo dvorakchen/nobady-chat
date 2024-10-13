@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { type ChatStateModel, provideKey } from '@/stores/chat_state';
-import { computed, inject, nextTick, onMounted, ref, useTemplateRef } from 'vue';
+import { useChatState } from '@/stores/chat_state';
+import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue';
 import MyBubble from '@/components/MyBubble.vue';
 import TheirBubble from '@/components/TheirBubble.vue';
 
@@ -10,14 +10,10 @@ const sentMsgEmit = defineEmits<{
 
 let bubbleList = useTemplateRef('bubble-list');
 
-let chatState = inject<ChatStateModel>(provideKey)!
-
-let talkToUser = computed(() => {
-    return chatState.user.talkTo
-})
+let chatState = useChatState();
 
 let records = computed(() => {
-    let talkToId = chatState.user.talkTo?.id;
+    let talkToId = chatState.talkTo?.id;
     if (!talkToId) {
         return [];
     }
@@ -35,10 +31,11 @@ onMounted(() => {
 })
 
 function handleSendMsg() {
-    if (sendMsg.value.trim() === '') {
+    if (sendMsg.value.trim() === '' || chatState.talkTo === null) {
         return;
     }
-    chatState.sendNewMsg(talkToUser.value!.id, sendMsg.value)
+    console.log('send to: ', chatState.talkTo.id)
+    chatState.sendNewMsg(chatState.talkTo.id, sendMsg.value)
     nextTick(() => {
         if (bubbleList.value?.children?.length ?? 0 > 0) {
             bubbleList.value!.children[bubbleList.value!.children.length! - 1].scrollIntoView({
@@ -53,19 +50,19 @@ function handleSendMsg() {
 
 <template>
     <div class="flex-grow rounded-md max-md:h-0">
-        <div class="w-full h-full flex items-center justify-center" v-if="talkToUser === null">
+        <div class="w-full h-full flex items-center justify-center" v-if="chatState.talkTo === null">
             <p class="text-3xl font-black -mt-10">NOBODY CHAT</p>
         </div>
-        <div class="flex flex-col h-full space-y-2" v-if="talkToUser !== null">
+        <div class="flex flex-col h-full space-y-2" v-if="chatState.talkTo !== null">
             <div class="p-4">
                 <span class="text-lg font-bold" id="chat-to">Chat to:
-                    <span :data-userid="talkToUser.id">{{ talkToUser.name }}
-                        <span class="text-accent" v-if="talkToUser === null">(Offline)</span>
+                    <span :data-userid="chatState.talkTo?.id">{{ chatState.talkTo?.name }}
+                        <span class="text-accent" v-if="chatState.talkTo === null">(Offline)</span>
                     </span>
                 </span>
             </div>
             <div class="flex-grow overflow-y-scroll">
-                <ul class="px-4" ref="bubble-list">
+                <ul class="px-4" id="bubbleList" ref="bubble-list">
                     <template v-for="[their, own] of records">
                         <component :is="their === '' ? MyBubble : TheirBubble" :message="their === '' ? own : their" />
                     </template>
