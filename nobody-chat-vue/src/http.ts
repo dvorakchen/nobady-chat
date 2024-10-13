@@ -1,4 +1,5 @@
 const ADDR = import.meta.env.VITE_API_ADDRESS
+console.warn('addr: ', ADDR)
 
 export function newConnection(): WebSocket {
   let protocol = 'ws'
