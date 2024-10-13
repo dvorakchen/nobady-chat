@@ -1,0 +1,4 @@
+name: nobody-chat
+include:
+  - ./nobody-chat-vue/compose.yaml
+  - ./nobody-chat-server/compose.yaml

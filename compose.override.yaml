@@ -1,0 +1,9 @@
+services:
+  vue:
+    depends_on:
+      - server
+    environment:
+      # VITE_API_ADDRESS=https:test.rest.com
+  server:
+    environment:
+      - ALLOW_URLS=["http://localhost:3001"]

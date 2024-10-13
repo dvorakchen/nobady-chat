@@ -10,4 +10,4 @@ services:
       - 3000:3000
     environment:
       - RUST_LOG=info
-      - ALLOW_URLS=[\"http://127.0.0.1:5173\"]
+      - ALLOW_URLS=[\"http://127.0.0.1:3001\"]

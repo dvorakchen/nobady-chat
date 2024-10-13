@@ -6,6 +6,7 @@ LABEL author="DvorakChen"
 LABEL email="dvorakchen@outlook.com"
 
 ARG APP_NAME
+
 RUN cargo install cargo-chef
 WORKDIR /app
 

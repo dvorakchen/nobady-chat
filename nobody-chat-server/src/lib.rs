@@ -3,7 +3,7 @@ use std::{io, net::SocketAddr};
 use crate::routes::home::{all_online_users, user_connection};
 use axum::{http::HeaderValue, routing::get, Extension, Router};
 use chat::ChatRoom;
-use log::debug;
+use log::{debug, info};
 use tokio::net::TcpListener;
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
@@ -80,7 +80,7 @@ impl App {
             )
         };
 
-        println!("{:?}", allow_origins);
+        info!("Cros allow origins: {:?}", allow_origins);
         CorsLayer::new().allow_origin(allow_origins)
     }
 }
