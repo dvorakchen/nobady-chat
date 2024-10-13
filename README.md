@@ -12,15 +12,20 @@ open your broswer to `localhost:3001`, and could see the UI
 ## Production
 If you would like to deply to production, you might modify the `compose.override.yaml` environment fields first
 
+This is modify the API server CORS allow origins:
 ```
 services:
   vue:
     depends_on:
       - server
-    environment:
-      # this
-      # VITE_API_ADDRESS=your.api.com
   server:
     environment:
       # - ALLOW_URLS=["your.UI.domain.com"]
+```
+
+This is modify the UI request API address:
+```sh
+# ./nobody-chat-vue/.env.production
+
+VITE_API_ADDRESS="<your production api address>"
 ```
