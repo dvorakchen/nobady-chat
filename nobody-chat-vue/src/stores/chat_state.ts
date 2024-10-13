@@ -85,7 +85,9 @@ export const useChatState = defineStore('chatState', {
       this.onlineUsers = this.onlineUsers.filter((e) => e.id !== id)
     },
     talkTo(user: OnlineUserModel) {
+      console.log('in talkTo pinia, user: ', user)
       this.user.talkTo = user
+      console.log('this.user.talkTo: ', this.user.talkTo)
       this.currentRecords = this.historyRecords.get(user.id)
       let tmpUser = this.onlineUsers.find((e) => e.id === user.id)
       tmpUser && (tmpUser.unread = 0)

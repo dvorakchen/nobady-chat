@@ -3,13 +3,13 @@ const { id, name, unread } = defineProps(['id', 'name', 'unread'])
 
 import { computed, inject } from 'vue'
 
-import { type ChatStateModel, provideKey } from '@/stores/chat_state';
+import { provideKey } from '@/stores/chat_state';
 import type { OnlineUserModel } from '@/http';
 
-let chatState = inject<ChatStateModel>(provideKey)!;
+let chatState: any = inject(provideKey)!;
 
 const isOwn = computed(() => {
-    return chatState?.user?.id === id;
+    return chatState?.user?.value?.id === id;
 })
 function handleClickUser() {
     if (isOwn.value) {

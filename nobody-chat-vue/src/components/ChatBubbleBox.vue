@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type ChatStateModel, type HistoryRecord, provideKey } from '@/stores/chat_state';
+import { type ChatStateModel, provideKey } from '@/stores/chat_state';
 import { computed, inject, nextTick, onMounted, ref, useTemplateRef } from 'vue';
 import MyBubble from '@/components/MyBubble.vue';
 import TheirBubble from '@/components/TheirBubble.vue';
