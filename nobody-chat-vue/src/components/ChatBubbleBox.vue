@@ -34,7 +34,6 @@ function handleSendMsg() {
     if (sendMsg.value.trim() === '' || chatState.talkTo === null) {
         return;
     }
-    console.log('send to: ', chatState.talkTo.id)
     chatState.sendNewMsg(chatState.talkTo.id, sendMsg.value)
     nextTick(() => {
         if (bubbleList.value?.children?.length ?? 0 > 0) {

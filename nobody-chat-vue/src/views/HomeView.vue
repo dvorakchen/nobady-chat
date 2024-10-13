@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, provide, readonly } from 'vue'
+import { onMounted } from 'vue'
 import { getOnlineUsers, type WsRecvData } from '@/http'
 import OnlineUser from '@/components/OnlineUser.vue'
 import ChatBubbleBox from '@/components/ChatBubbleBox.vue'
@@ -14,7 +14,6 @@ onMounted(async () => {
   socket = chatState.socket;
   socket.onmessage = (event) => {
     let data: WsRecvData = JSON.parse(event.data);
-    console.log('recv data: ', data);
     if (data.msg_type.setUser) {
       chatState.setUserInfo(data.msg_type.setUser);
     } else if (data.msg_type.userOnline) {
