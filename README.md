@@ -28,4 +28,7 @@ This is modify the UI request API address:
 # ./nobody-chat-vue/.env.production
 
 VITE_API_ADDRESS="<your production api address>"
+VITE_TURN_URL="turn server address"
+VITE_TURN_USERNAME="turn server username"
+VITE_TURN_CREDENTIAL="turn server credential"
 ```
