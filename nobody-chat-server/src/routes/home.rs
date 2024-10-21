@@ -1,14 +1,21 @@
 use std::net::SocketAddr;
 
 use axum::{
-    extract::{ws::WebSocket, ConnectInfo, WebSocketUpgrade}, http::StatusCode, response::IntoResponse, Extension, Json
+    extract::{ws::WebSocket, ConnectInfo, Request, State, WebSocketUpgrade},
+    http::{header, StatusCode},
+    response::{IntoResponse, Response},
+    Extension, Json,
 };
 use axum_extra::{headers, TypedHeader};
 use kameo::{actor::ActorRef, request::MessageSend};
 use log::info;
 use serde::{Deserialize, Serialize};
 
-use crate::chat::{AllActivityUsers, ChatRoom, User, UserId};
+use crate::state::AllowOriginState;
+use crate::{
+    chat::{AllActivityUsers, ChatRoom, User},
+    models::UserId,
+};
 
 #[derive(Serialize, Deserialize)]
 pub struct OnlineUser {
@@ -32,29 +39,41 @@ pub async fn all_online_users(
     Json(list)
 }
 
-pub async fn user_connection(
+pub async fn web_socket_connection(
     ws: WebSocketUpgrade,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
+    origin: Option<TypedHeader<headers::Origin>>,
+    State(allow_origins): State<AllowOriginState>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Extension(chat): Extension<ActorRef<ChatRoom>>,
-    // body: String,
 ) -> impl IntoResponse {
-    const UNKNOW_BROWSER: &str = "Unknown browser";
-    let user_agent = if let Some(TypedHeader(user_agent)) = user_agent {
-        user_agent.to_string()
-    } else {
-        String::from(UNKNOW_BROWSER)
-    };
-
-    info!("`{}` at {:?} connected.", user_agent, addr);
-
-    if user_agent == UNKNOW_BROWSER {
-        return (StatusCode::BAD_REQUEST, UNKNOW_BROWSER).into_response();
+    if let Some(res) = valify_header(origin, user_agent, allow_origins) {
+        return res;
     }
+
+    info!("{:?} connected.", addr);
 
     ws.on_upgrade(move |socket| append_new_connection(socket, chat))
 }
 
 async fn append_new_connection(ws: WebSocket, chat_room: ActorRef<ChatRoom>) {
     let _ = User::new_actor(ws, chat_room).await;
+}
+
+fn valify_header(
+    origin: Option<TypedHeader<headers::Origin>>,
+    user_agent: Option<TypedHeader<headers::UserAgent>>,
+    allow_origins: AllowOriginState,
+) -> Option<Response> {
+    match origin {
+        Some(TypedHeader(value)) if allow_origins.iter().any(|url| url == &value.to_string()) => {}
+        _ => return Some((StatusCode::UNAUTHORIZED, "Disallowed Origin").into_response()),
+    }
+
+    const UNKNOW_BROWSER: &str = "Unknown browser";
+    if let None = user_agent {
+        return Some((StatusCode::BAD_REQUEST, UNKNOW_BROWSER).into_response());
+    }
+
+    None
 }

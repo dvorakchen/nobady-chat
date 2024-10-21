@@ -10,4 +10,8 @@
   .scrollbar-w-auto {
     scrollbar-width: auto;
   }
+
+  .user-selection-none {
+    user-select: none;
+  }
 }

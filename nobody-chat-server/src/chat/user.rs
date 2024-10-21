@@ -12,14 +12,16 @@ use log::{debug, error, info, warn};
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::chat::{models::SendData, SendMsg, UserDisconnection};
+use crate::{
+    chat::{models::SendData, SendMsg, UserDisconnection},
+    models::UserId,
+    signal::SignalInfo,
+};
 
 use super::{
     models::{RecvData, RecvDataType},
-    ChatRoom, NewUserConnection, UserOnline,
+    ChatRoom, ForwordSignal, NewUserConnection, SetName, UserOnline,
 };
-
-pub type UserId = String;
 
 pub struct UserRef {
     pub id: UserId,
@@ -32,6 +34,14 @@ pub struct User {
     name: String,
     sender: SplitSink<WebSocket, WsMessage>,
     chat_room: ActorRef<ChatRoom>,
+    /// has VideoConnection if this user is video connecting, or requesting
+    video_handling: Option<VideoConnection>,
+}
+
+struct VideoConnection {
+    from: UserId,
+    to: UserId,
+    timestamp: i64,
 }
 
 impl Actor for User {
@@ -117,6 +127,7 @@ impl User {
             name: name.clone(),
             sender,
             chat_room: chat_room.clone(),
+            video_handling: None,
         });
 
         actor.attach_stream(recv, (), ());
@@ -169,14 +180,15 @@ impl User {
     async fn handle_recv_msg(&self, raw_msg: String) {
         if let Ok(data) = serde_json::from_str::<'_, RecvData>(&raw_msg) {
             match data.msg_type {
-                RecvDataType::TalkTo { to, msg } => self.send_msg_to_user(to, msg).await,
+                RecvDataType::TalkTo { to, msg } => self.handle_talk_to_user(to, msg).await,
+                RecvDataType::Signal(signal) => self.handle_signal(signal).await,
             }
         } else {
             error!("received unknow data: {raw_msg}");
         }
     }
 
-    async fn send_msg_to_user(&self, to: UserId, msg: String) {
+    async fn handle_talk_to_user(&self, to: UserId, msg: String) {
         debug!("rece: to: {to}, msg: {msg}");
 
         self.chat_room
@@ -185,6 +197,16 @@ impl User {
                 to,
                 msg,
             })
+            .send()
+            .await
+            .unwrap();
+    }
+
+    async fn handle_signal(&self, signal: SignalInfo) {
+        debug!("recv: signal message: {:?}", signal);
+
+        self.chat_room
+            .tell(ForwordSignal(signal))
             .send()
             .await
             .unwrap();
@@ -229,6 +251,25 @@ impl Message<UserDisconnection> for User {
     }
 }
 
+impl Message<SetName> for User {
+    type Reply = ();
+
+    async fn handle(
+        &mut self,
+        msg: SetName,
+        _ctx: kameo::message::Context<'_, Self, Self::Reply>,
+    ) -> Self::Reply {
+        if msg.0 == self.id {
+            return;
+        }
+
+        let data = SendData::new_set_name(msg.0, msg.1);
+        let data = json!(data).to_string();
+
+        self.sender.send(WsMessage::Text(data)).await.unwrap();
+    }
+}
+
 pub struct NewMsg {
     pub from: UserId,
     pub msg: String,
@@ -246,5 +287,21 @@ impl Message<NewMsg> for User {
         let data = json!(data).to_string();
 
         self.sender.send(WsMessage::Text(data)).await.unwrap();
+    }
+}
+
+impl Message<ForwordSignal> for User {
+    type Reply = ();
+
+    async fn handle(
+        &mut self,
+        msg: ForwordSignal,
+        _ctx: kameo::message::Context<'_, Self, Self::Reply>,
+    ) -> Self::Reply {
+        if msg.0.to_id == self.id {
+            let data = json!(SendData::new_signal_forword(msg.0)).to_string();
+
+            self.sender.send(WsMessage::Text(data)).await.unwrap();
+        }
     }
 }

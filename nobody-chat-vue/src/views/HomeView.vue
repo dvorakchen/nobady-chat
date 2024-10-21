@@ -1,32 +1,18 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { getOnlineUsers, type WsRecvData } from '@/http'
+import { getOnlineUsers } from '@/http'
 import OnlineUser from '@/components/OnlineUser.vue'
 import ChatBubbleBox from '@/components/ChatBubbleBox.vue'
 import { useChatState } from '@/stores/chat_state'
-
+import Notices from '@/components/Notices.vue'
 
 let socket: WebSocket;
 
 const chatState = useChatState();
 
 onMounted(async () => {
-  socket = chatState.socket;
-  socket.onmessage = (event) => {
-    let data: WsRecvData = JSON.parse(event.data);
-    if (data.msg_type.setUser) {
-      chatState.setUserInfo(data.msg_type.setUser);
-    } else if (data.msg_type.userOnline) {
-      chatState.newUserOnline(data.msg_type.userOnline);
-    } else if (data.msg_type.msg) {
-      chatState.receiveMsg(data.msg_type.msg.from, data.msg_type.msg.msg);
-    } else if (data.msg_type.userOffline) {
-      chatState.removeUser(data.msg_type.userOffline.id);
-    }
-
-  }
-
-  chatState.onlineUsers = await getOnlineUsers();
+  chatState.initSocket();
+  chatState.initOnlineUsers(await getOnlineUsers());
 })
 
 function handleSentMsg(msg: string) {
@@ -46,6 +32,7 @@ function handleSentMsg(msg: string) {
 </script>
 
 <template>
+  <Notices />
   <main id="chat-main" class="h-screen w-screen bg-base-200 md:h-[90vh] md:w-[90vw] md:rounded-md">
     <div class="flex flex-col md:flex-row h-full p-4 gap-4">
       <div class="md:bg-base-100 min-w-72 md:h-full rounded-md">

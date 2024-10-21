@@ -1,6 +1,6 @@
 use std::{io, net::SocketAddr};
 
-use crate::routes::home::{all_online_users, user_connection};
+use crate::routes::home::{all_online_users, web_socket_connection};
 use axum::{http::HeaderValue, routing::get, Extension, Router};
 use chat::ChatRoom;
 use log::{debug, info};
@@ -8,7 +8,12 @@ use tokio::net::TcpListener;
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
 mod chat;
+pub(crate) mod models;
 pub mod routes;
+mod signal;
+pub mod state;
+
+use state::new_allow_origin_state;
 
 pub struct App {
     addr: String,
@@ -55,13 +60,14 @@ impl App {
 
         let app = Router::new()
             .route("/", get(|| async { "Running" }))
-            .route("/ws", get(user_connection))
+            .route("/ws", get(web_socket_connection))
             .nest("/api", api_routes)
             .nest_service("/assets", tower_http::services::ServeDir::new("assets"))
             .nest_service(
                 "/favicon.ico",
                 tower_http::services::ServeFile::new("assets/favicon.ico"),
             )
+            .with_state(new_allow_origin_state(self.allow_urls.clone()))
             .layer(self.cors())
             .layer(Extension(ChatRoom::new()));
 

@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use super::UserId;
+use crate::signal::SignalInfo;
+
+use crate::models::UserId;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -9,6 +11,9 @@ enum MsgType {
     Msg { from: UserId, msg: String },
     UserOnline { id: UserId, name: String },
     UserOffline { id: UserId },
+    SetName { id: UserId, name: String },
+
+    Signal(SignalInfo),
 }
 
 #[derive(Serialize)]
@@ -40,12 +45,25 @@ impl SendData {
             msg_type: MsgType::UserOffline { id },
         }
     }
+
+    pub fn new_set_name(id: UserId, name: String) -> Self {
+        Self {
+            msg_type: MsgType::SetName { id, name },
+        }
+    }
+
+    pub fn new_signal_forword(signal: SignalInfo) -> Self {
+        Self {
+            msg_type: MsgType::Signal(signal),
+        }
+    }
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum RecvDataType {
     TalkTo { to: UserId, msg: String },
+    Signal(SignalInfo),
 }
 
 #[derive(Deserialize)]

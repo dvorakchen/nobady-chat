@@ -1,3 +1,5 @@
+import type { SignalInfo } from './rtc'
+
 const ADDR = import.meta.env.VITE_API_ADDRESS
 
 export function newConnection(): WebSocket {
@@ -40,14 +42,121 @@ export class OnlineUserModel {
   unread: number = 0
 }
 
-export type WsRecvData = {
-  msg_type: {
-    setUser: OnlineUserModel
-    userOnline: OnlineUserModel
-    msg: {
-      from: string
-      msg: string
+export class WebSocketData {
+  public msg_type: WebSocketDataType = {} as WebSocketDataType
+
+  static newRequestVideo(from_id: string, to_id: string): WebSocketData {
+    return {
+      msg_type: {
+        signal: {
+          from_id,
+          to_id,
+          signal_type: 'requestVideo',
+          value: new Date().getTime() + ''
+        } as SignalInfo
+      } as WebSocketDataType
     }
-    userOffline: OnlineUserModel
   }
+
+  static newCanAccept(from_id: string, to_id: string): WebSocketData {
+    return {
+      msg_type: {
+        signal: {
+          from_id,
+          to_id,
+          signal_type: 'canAccept',
+          value: ''
+        } as SignalInfo
+      } as WebSocketDataType
+    }
+  }
+
+  static newBusying(from_id: string, to_id: string): WebSocketData {
+    return {
+      msg_type: {
+        signal: {
+          from_id,
+          to_id,
+          signal_type: 'busying',
+          value: ''
+        } as SignalInfo
+      } as WebSocketDataType
+    }
+  }
+
+  static newRequestedFirst(from_id: string, to_id: string): WebSocketData {
+    return {
+      msg_type: {
+        signal: {
+          from_id,
+          to_id,
+          signal_type: 'requestedFirst',
+          value: ''
+        } as SignalInfo
+      } as WebSocketDataType
+    }
+  }
+
+  static newOffer(from_id: string, to_id: string, sdp: string): WebSocketData {
+    return {
+      msg_type: {
+        signal: {
+          from_id,
+          to_id,
+          signal_type: 'offer',
+          value: sdp
+        } as SignalInfo
+      } as WebSocketDataType
+    }
+  }
+
+  static newAnswer(from_id: string, to_id: string, sdp: string): WebSocketData {
+    return {
+      msg_type: {
+        signal: {
+          from_id,
+          to_id,
+          signal_type: 'answer',
+          value: sdp
+        } as SignalInfo
+      } as WebSocketDataType
+    }
+  }
+
+  static newDeny(from_id: string, to_id: string): WebSocketData {
+    return {
+      msg_type: {
+        signal: {
+          from_id,
+          to_id,
+          signal_type: 'deny',
+          value: ''
+        } as SignalInfo
+      } as WebSocketDataType
+    }
+  }
+
+  static newNewCandidate(from_id: string, to_id: string, candidate: string): WebSocketData {
+    return {
+      msg_type: {
+        signal: {
+          from_id,
+          to_id,
+          signal_type: 'newCandidate',
+          value: candidate
+        } as SignalInfo
+      } as WebSocketDataType
+    }
+  }
+}
+
+export type WebSocketDataType = {
+  setUser: OnlineUserModel
+  userOnline: OnlineUserModel
+  msg: {
+    from: string
+    msg: string
+  }
+  userOffline: OnlineUserModel
+  signal: SignalInfo
 }

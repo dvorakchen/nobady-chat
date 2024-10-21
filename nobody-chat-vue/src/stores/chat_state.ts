@@ -1,4 +1,5 @@
-import { newConnection, type OnlineUserModel } from '@/http'
+import { newConnection, type OnlineUserModel, type WebSocketData } from '@/http'
+import { handleRecvSignal } from '@/rtc'
 import { defineStore } from 'pinia'
 import { ref, nextTick } from 'vue'
 
@@ -25,11 +26,32 @@ export const useChatState = defineStore('chatState', {
     currentChat: ref<OnlineUserModel | null>(null),
     user: ref<User>(new User()),
     currentRecords: ref<HistoryRecord[]>([]),
-    talkTo: ref<User | null>(null)
+    talkTo: ref<User | null>(null),
+    notices: ref<string[]>([])
   }),
   actions: {
+    initSocket() {
+      let socket = this.socket
+      socket.onmessage = (event) => {
+        let data: WebSocketData = JSON.parse(event.data)
+        if (data.msg_type.setUser) {
+          this.setUserInfo(data.msg_type.setUser)
+        } else if (data.msg_type.userOnline) {
+          this.newUserOnline(data.msg_type.userOnline)
+        } else if (data.msg_type.msg) {
+          this.receiveMsg(data.msg_type.msg.from, data.msg_type.msg.msg)
+        } else if (data.msg_type.userOffline) {
+          this.removeUser(data.msg_type.userOffline.id)
+        } else if (data.msg_type.signal) {
+          handleRecvSignal(data.msg_type.signal)
+        }
+      }
+    },
     setCurrentChat(value: OnlineUserModel) {
       this.currentChat = value
+    },
+    initOnlineUsers(onlineUsers: OnlineUserModel[]) {
+      this.onlineUsers = onlineUsers
     },
     setUserInfo(user: OnlineUserModel) {
       this.user.id = user.id

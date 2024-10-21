@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use super::{NewMsg, UserId, UserRef};
+use super::{NewMsg, UserRef};
+use crate::{models::UserId, signal::SignalInfo};
 use kameo::{
     actor::{ActorRef, PubSub, Publish, Subscribe},
     message::Message,
@@ -14,6 +15,7 @@ pub struct ChatRoom {
     activity_users: HashMap<String, UserRef>,
     online_pubsub: ActorRef<PubSub<UserOnline>>,
     offline_pubsub: ActorRef<PubSub<UserDisconnection>>,
+    new_name_pubsub: ActorRef<PubSub<SetName>>,
 }
 
 impl ChatRoom {
@@ -22,6 +24,7 @@ impl ChatRoom {
             activity_users: HashMap::default(),
             online_pubsub: kameo::spawn(PubSub::new()),
             offline_pubsub: kameo::spawn(PubSub::new()),
+            new_name_pubsub: kameo::spawn(PubSub::new()),
         });
 
         chat_room
@@ -51,17 +54,19 @@ impl Message<NewUserConnection> for ChatRoom {
             return;
         }
 
-        self.online_pubsub
-            .ask(Subscribe(msg.user.actor_ref.clone()))
-            .send()
-            .await
-            .unwrap();
+        macro_rules! user_subscribe {
+            ($user_actor_ref: expr) => {
+                $user_actor_ref
+                    .ask(Subscribe(msg.user.actor_ref.clone()))
+                    .send()
+                    .await
+                    .unwrap();
+            };
+        }
 
-        self.offline_pubsub
-            .ask(Subscribe(msg.user.actor_ref.clone()))
-            .send()
-            .await
-            .unwrap();
+        user_subscribe!(self.online_pubsub);
+        user_subscribe!(self.offline_pubsub);
+        user_subscribe!(self.new_name_pubsub);
 
         self.activity_users.insert(msg.id, msg.user);
     }
@@ -112,13 +117,21 @@ impl Message<UserOnline> for ChatRoom {
         _ctx: kameo::message::Context<'_, Self, Self::Reply>,
     ) -> Self::Reply {
         self.online_pubsub.ask(Publish(msg)).send().await.unwrap();
-        // self.activity_users
-        //     .iter()
-        //     .filter(|(id, _)| **id != msg.0)
-        //     .for_each(|(id, user_ref)| {
-        //         debug!("found id: {}, msg id: {}", id, msg.0);
-        //         user_ref.actor_ref.tell(msg.clone()).send_sync().unwrap();
-        //     });
+    }
+}
+
+#[derive(Clone)]
+pub struct SetName(pub UserId, pub String);
+
+impl Message<SetName> for ChatRoom {
+    type Reply = ();
+
+    async fn handle(
+        &mut self,
+        msg: SetName,
+        _ctx: kameo::message::Context<'_, Self, Self::Reply>,
+    ) -> Self::Reply {
+        self.new_name_pubsub.ask(Publish(msg)).send().await.unwrap();
     }
 }
 
@@ -145,6 +158,24 @@ impl Message<SendMsg> for ChatRoom {
                 })
                 .send()
                 .await;
+        }
+    }
+}
+
+/// signal forwork to specify User
+/// do nothing else, just forwork
+pub struct ForwordSignal(pub SignalInfo);
+
+impl Message<ForwordSignal> for ChatRoom {
+    type Reply = ();
+
+    async fn handle(
+        &mut self,
+        msg: ForwordSignal,
+        _ctx: kameo::message::Context<'_, Self, Self::Reply>,
+    ) -> Self::Reply {
+        if let Some(to_user) = self.activity_users.get(&msg.0.to_id) {
+            to_user.actor_ref.tell(msg).send().await.unwrap();
         }
     }
 }
