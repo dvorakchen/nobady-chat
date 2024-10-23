@@ -7,6 +7,7 @@ import IconVideo from '@/icons/video.vue'
 import VideoBox from './VideoView/VideoBox.vue';
 import { usePeerState } from '@/stores/peer_state';
 import RequestAlert from './VideoView/RequestAlert.vue';
+import { setOverScroll } from '@/utils';
 
 const sentMsgEmit = defineEmits<{
     (e: 'sentMsg', msg: string): void
@@ -78,18 +79,21 @@ const videoPositionStyle = computed(() => {
     }
 })
 
-function handleVideoMoveable(ev: MouseEvent) {
+function handlePointerStart(ev: PointerEvent) {
     let ele = ev.currentTarget as HTMLElement;
+    setOverScroll(false);
+    console.log('false')
 
     startVideoPosition.x = ev.clientX;
     startVideoPosition.y = ev.clientY;
 
-    ele.addEventListener('mousemove', handleVideoMove);
-    ele.addEventListener('mouseup', handleVideoRemoveMoveEvent)
-    ele.addEventListener('mouseleave', handleVideoRemoveMoveEvent)
+    ele.addEventListener('pointermove', handleVideoMove);
+    ele.addEventListener('pointerup', handleVideoRemoveMoveEvent)
+    ele.addEventListener('pointerleave', handleVideoRemoveMoveEvent)
 }
 
-function handleVideoMove(ev: MouseEvent) {
+function handleVideoMove(ev: PointerEvent) {
+    ev.preventDefault();
     const tmpX = ev.clientX - startVideoPosition.x + preVideoPosition.x;
     const tmpY = ev.clientY - startVideoPosition.y + preVideoPosition.y;
 
@@ -97,15 +101,17 @@ function handleVideoMove(ev: MouseEvent) {
     videoPosition.value.y = tmpY
 }
 
-function handleVideoRemoveMoveEvent(ev: MouseEvent) {
+function handleVideoRemoveMoveEvent(ev: PointerEvent) {
     let ele = ev.currentTarget as HTMLElement;
+    setOverScroll(true)
+    console.log('true')
 
     preVideoPosition.x = videoPosition.value.x;
     preVideoPosition.y = videoPosition.value.y;
 
-    ele.removeEventListener('mousemove', handleVideoMove);
-    ele.removeEventListener('mouseup', handleVideoRemoveMoveEvent)
-    ele.removeEventListener('mouseleave', handleVideoRemoveMoveEvent)
+    ele.removeEventListener('pointermove', handleVideoMove);
+    ele.removeEventListener('pointerup', handleVideoRemoveMoveEvent)
+    ele.removeEventListener('pointerleave', handleVideoRemoveMoveEvent)
 }
 
 
@@ -148,8 +154,8 @@ function handleVideoRemoveMoveEvent(ev: MouseEvent) {
     </div>
 
     <teleport to="#app" v-if="peerState.isUsing">
-        <div class="fixed z-50 top-2 right-2 user-selection-none cursor-all-scroll"
-            @mousedown.passive="handleVideoMoveable" :style="videoPositionStyle">
+        <div class="fixed z-50 top-2 right-2 user-selection-none cursor-all-scroll w-80 aspect-[9/16]
+         max-w-[50%]" @pointerdown.stop.prevent.passive="handlePointerStart" :style="videoPositionStyle">
             <VideoBox />
         </div>
     </teleport>

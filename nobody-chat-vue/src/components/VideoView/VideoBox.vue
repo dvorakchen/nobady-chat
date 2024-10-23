@@ -39,17 +39,17 @@ function requestVideoCommunicate() {
 </script>
 
 <template>
-    <div class="mockup-phone border-primary user-selection-none">
-        <div class="camera"></div>
-        <div class="display">
-            <div class="artboard artboard-demo phone-1">
+    <div class="mockup-phone border-primary user-selection-none w-full h-full">
+        <div class="camera max-w-[60%]"></div>
+        <div class="display w-full h-full">
+            <div class="artboard artboard-demo w-full h-full">
                 <div class="relative w-full h-full flex flex-col justify-center items-center">
                     <h1 class="absolute text-xl flex justify-center gap-2 bg-base-100 p-2 shadow rounded opacity-70"
                         v-if="peerState.isConnection">连接中
                         <span class="loading loading-bars"></span>
                     </h1>
-                    <video width="100%" ref="video-ele" muted v-show="peerState.showVideo" />
-                    <video class="absolute top-5 right-4" width="50%" ref="remote-video-ele" autoplay />
+                    <video width="100%" ref="video-ele" playsinline muted v-show="peerState.showVideo" />
+                    <video class="absolute top-5 right-4" ref="remote-video-ele" playsinline width="50%" autoplay />
                 </div>
             </div>
         </div>
