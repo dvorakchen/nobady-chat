@@ -1,8 +1,8 @@
 use std::net::SocketAddr;
 
 use axum::{
-    extract::{ws::WebSocket, ConnectInfo, Request, State, WebSocketUpgrade},
-    http::{header, StatusCode},
+    extract::{ws::WebSocket, ConnectInfo, State, WebSocketUpgrade},
+    http::StatusCode,
     response::{IntoResponse, Response},
     Extension, Json,
 };
@@ -66,7 +66,10 @@ fn valify_header(
     allow_origins: AllowOriginState,
 ) -> Option<Response> {
     match origin {
-        Some(TypedHeader(value)) if allow_origins.iter().any(|url| url == &value.to_string()) => {}
+        Some(TypedHeader(value))
+            if allow_origins
+                .iter()
+                .any(|url| url == "*" || url == &value.to_string()) => {}
         _ => return Some((StatusCode::UNAUTHORIZED, "Disallowed Origin").into_response()),
     }
 

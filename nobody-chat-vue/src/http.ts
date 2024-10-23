@@ -31,7 +31,7 @@ export async function getOnlineUsers(): Promise<OnlineUserModel[]> {
   }
 
   let resp = await fetch(`${location.protocol}//${ADDR}${path}`)
-  let data: [OnlineUserModel] = await resp.json()
+  let data: OnlineUserModel[] = await resp.json()
 
   return data
 }

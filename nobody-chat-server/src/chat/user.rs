@@ -34,14 +34,6 @@ pub struct User {
     name: String,
     sender: SplitSink<WebSocket, WsMessage>,
     chat_room: ActorRef<ChatRoom>,
-    /// has VideoConnection if this user is video connecting, or requesting
-    video_handling: Option<VideoConnection>,
-}
-
-struct VideoConnection {
-    from: UserId,
-    to: UserId,
-    timestamp: i64,
 }
 
 impl Actor for User {
@@ -127,7 +119,6 @@ impl User {
             name: name.clone(),
             sender,
             chat_room: chat_room.clone(),
-            video_handling: None,
         });
 
         actor.attach_stream(recv, (), ());
