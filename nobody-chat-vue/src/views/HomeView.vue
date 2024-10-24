@@ -4,7 +4,8 @@ import { getOnlineUsers } from '@/http'
 import OnlineUser from '@/components/OnlineUser.vue'
 import ChatBubbleBox from '@/components/ChatBubbleBox.vue'
 import { useChatState } from '@/stores/chat_state'
-import Notices from '@/components/Notices.vue'
+import Alerts from '@/components/message/Alerts.vue'
+import Notifications from '@/components/message/Notifications.vue'
 
 let socket: WebSocket;
 
@@ -32,8 +33,14 @@ function handleSentMsg(msg: string) {
 </script>
 
 <template>
-  <Notices />
+  <div class="fixed top-2 z-50 w-full px-2">
+    <Alerts />
+  </div>
+  <div class="fixed top-2 right-2 z-50">
+    <Notifications />
+  </div>
   <main id="chat-main" class="h-screen w-screen bg-base-200 md:h-[90vh] md:w-[90vw] md:rounded-md">
+
     <div class="flex flex-col md:flex-row h-full p-4 gap-4">
       <div class="md:bg-base-100 min-w-72 md:h-full rounded-md">
         <div class="drawer md:drawer-open flex flex-col max-h-full py-2 pl-2">

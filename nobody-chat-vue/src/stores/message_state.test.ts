@@ -19,8 +19,10 @@ describe('test msg state', () => {
   it('push a alert without event', () => {
     const EXPECTED_LENGTH = 1
     const EXPECTED_CONTENT = ''
+    const EXPECTED_PRIMARY_LABEL = ''
+    const EXPECTED_SECONDARY_LABEL = ''
 
-    const alert = new Alert('', null, null)
+    const alert = new Alert('', '', '', null, null)
 
     const msgState = useMsgState()
     msgState.pushAlert(alert)
@@ -29,17 +31,28 @@ describe('test msg state', () => {
 
     let retrievedAlert = msgState.alerts[0].alert
     expect(retrievedAlert.content).toBe(EXPECTED_CONTENT)
+    expect(retrievedAlert.primaryLabel).toBe(EXPECTED_PRIMARY_LABEL)
+    expect(retrievedAlert.secondaryLabel).toBe(EXPECTED_SECONDARY_LABEL)
     expect(retrievedAlert.primaryEvent).toBe(null)
     expect(retrievedAlert.secondaryEvent).toBe(null)
   })
 
   it('push two alerts without event', () => {
     const FULL_ALERT_CONTENT = 'TECH NO BORDERS'
+    const EXPECTED_PRIMARY_LABEL = 'PRIMARY'
+    const EXPECTED_SECONDARY_LABEL = 'SECONDARY'
+
     const FULL_ALERT_EVENT = () => {}
     const EXPECTED_LENGTH = 2
 
-    const alert_empty = new Alert('', null, null)
-    const alert_full = new Alert(FULL_ALERT_CONTENT, FULL_ALERT_EVENT, FULL_ALERT_EVENT)
+    const alert_empty = new Alert('', '', '', null, null)
+    const alert_full = new Alert(
+      FULL_ALERT_CONTENT,
+      EXPECTED_PRIMARY_LABEL,
+      EXPECTED_SECONDARY_LABEL,
+      FULL_ALERT_EVENT,
+      FULL_ALERT_EVENT
+    )
 
     const msgState = useMsgState()
     msgState.pushAlert(alert_empty)
@@ -47,23 +60,35 @@ describe('test msg state', () => {
 
     expect(msgState.alerts.length).toBe(EXPECTED_LENGTH)
 
-    expect(msgState.alerts[0].alert.content).toBe('')
+    expect(msgState.alerts[0].content).toBe('')
+    expect(msgState.alerts[0].primaryLabel).toBe('')
+    expect(msgState.alerts[0].secondaryLabel).toBe('')
     expect(msgState.alerts[0].alert.primaryEvent).toBe(null)
     expect(msgState.alerts[0].alert.secondaryEvent).toBe(null)
 
     expect(msgState.alerts[1].alert.content).toBe(FULL_ALERT_CONTENT)
+    expect(msgState.alerts[1].primaryLabel).toBe(EXPECTED_PRIMARY_LABEL)
+    expect(msgState.alerts[1].secondaryLabel).toBe(EXPECTED_SECONDARY_LABEL)
     expect(msgState.alerts[1].alert.primaryEvent).toBe(FULL_ALERT_EVENT)
     expect(msgState.alerts[1].alert.secondaryEvent).toBe(FULL_ALERT_EVENT)
   })
 
   it('click primary event', () => {
     const FULL_ALERT_CONTENT = 'TECH NO BORDERS'
+    const FULL_PRIMARY_LABEL = 'PRIMARY'
+    const FULL_SECONDARY_LABEL = 'SECONDARY'
 
     const CLOSE_EVENT = (close: Close) => {
       close()
     }
 
-    const alert = new Alert(FULL_ALERT_CONTENT, CLOSE_EVENT, CLOSE_EVENT)
+    const alert = new Alert(
+      FULL_ALERT_CONTENT,
+      FULL_PRIMARY_LABEL,
+      FULL_SECONDARY_LABEL,
+      CLOSE_EVENT,
+      CLOSE_EVENT
+    )
 
     const msgState = useMsgState()
     msgState.pushAlert(alert)
