@@ -1,5 +1,5 @@
 import { createPinia, setActivePinia } from 'pinia'
-import { Alert, Notification, useMsgState, type Close } from './message_state'
+import { Alert, Notification, useMsgState, type Close, type Event } from './message_state'
 import { expect, describe, it, beforeEach } from 'vitest'
 
 describe('test msg state', () => {
@@ -16,43 +16,33 @@ describe('test msg state', () => {
     expect(msgState.notifications.length).toBe(EXPECTED_INIT_LENGTH)
   })
 
-  it('push a alert without event', () => {
+  it('alert: push a alert without event', () => {
     const EXPECTED_LENGTH = 1
     const EXPECTED_CONTENT = ''
-    const EXPECTED_PRIMARY_LABEL = ''
-    const EXPECTED_SECONDARY_LABEL = ''
 
-    const alert = new Alert('', '', '', null, null)
+    const alert = new Alert(EXPECTED_CONTENT, null, null)
 
     const msgState = useMsgState()
     msgState.pushAlert(alert)
 
     expect(msgState.alerts.length).toBe(EXPECTED_LENGTH)
-
-    let retrievedAlert = msgState.alerts[0].alert
-    expect(retrievedAlert.content).toBe(EXPECTED_CONTENT)
-    expect(retrievedAlert.primaryLabel).toBe(EXPECTED_PRIMARY_LABEL)
-    expect(retrievedAlert.secondaryLabel).toBe(EXPECTED_SECONDARY_LABEL)
-    expect(retrievedAlert.primaryEvent).toBe(null)
-    expect(retrievedAlert.secondaryEvent).toBe(null)
+    expect(msgState.alerts[0].content).toBe(EXPECTED_CONTENT)
+    expect(msgState.alerts[0].hasPrimaryEvent).toBeFalsy()
+    expect(msgState.alerts[0].hasSecondaryEvent).toBeFalsy()
   })
 
-  it('push two alerts without event', () => {
+  it('alert: push two alerts without event', () => {
     const FULL_ALERT_CONTENT = 'TECH NO BORDERS'
-    const EXPECTED_PRIMARY_LABEL = 'PRIMARY'
-    const EXPECTED_SECONDARY_LABEL = 'SECONDARY'
 
-    const FULL_ALERT_EVENT = () => {}
+    const FULL_ALERT_EVENT = {
+      label: '',
+      func: () => {}
+    }
+
     const EXPECTED_LENGTH = 2
 
-    const alert_empty = new Alert('', '', '', null, null)
-    const alert_full = new Alert(
-      FULL_ALERT_CONTENT,
-      EXPECTED_PRIMARY_LABEL,
-      EXPECTED_SECONDARY_LABEL,
-      FULL_ALERT_EVENT,
-      FULL_ALERT_EVENT
-    )
+    const alert_empty = new Alert('', null, null)
+    const alert_full = new Alert(FULL_ALERT_CONTENT, FULL_ALERT_EVENT, FULL_ALERT_EVENT)
 
     const msgState = useMsgState()
     msgState.pushAlert(alert_empty)
@@ -61,46 +51,83 @@ describe('test msg state', () => {
     expect(msgState.alerts.length).toBe(EXPECTED_LENGTH)
 
     expect(msgState.alerts[0].content).toBe('')
-    expect(msgState.alerts[0].primaryLabel).toBe('')
-    expect(msgState.alerts[0].secondaryLabel).toBe('')
-    expect(msgState.alerts[0].alert.primaryEvent).toBe(null)
-    expect(msgState.alerts[0].alert.secondaryEvent).toBe(null)
+    expect(msgState.alerts[0].hasPrimaryEvent).toBeFalsy()
+    expect(msgState.alerts[0].hasSecondaryEvent).toBeFalsy()
 
-    expect(msgState.alerts[1].alert.content).toBe(FULL_ALERT_CONTENT)
-    expect(msgState.alerts[1].primaryLabel).toBe(EXPECTED_PRIMARY_LABEL)
-    expect(msgState.alerts[1].secondaryLabel).toBe(EXPECTED_SECONDARY_LABEL)
-    expect(msgState.alerts[1].alert.primaryEvent).toBe(FULL_ALERT_EVENT)
-    expect(msgState.alerts[1].alert.secondaryEvent).toBe(FULL_ALERT_EVENT)
+    expect(msgState.alerts[1].content).toBe(FULL_ALERT_CONTENT)
+    expect(msgState.alerts[1].hasPrimaryEvent).toBeTruthy()
+    expect(msgState.alerts[1].hasSecondaryEvent).toBeTruthy()
   })
 
-  it('click primary event', () => {
+  it('alert: click primary event', () => {
     const FULL_ALERT_CONTENT = 'TECH NO BORDERS'
     const FULL_PRIMARY_LABEL = 'PRIMARY'
     const FULL_SECONDARY_LABEL = 'SECONDARY'
 
-    const CLOSE_EVENT = (close: Close) => {
-      close()
+    const PRIMARY_CLOSE_EVENT: Event = {
+      label: FULL_PRIMARY_LABEL,
+      func: (close: Close) => {
+        close()
+      }
     }
 
-    const alert = new Alert(
-      FULL_ALERT_CONTENT,
-      FULL_PRIMARY_LABEL,
-      FULL_SECONDARY_LABEL,
-      CLOSE_EVENT,
-      CLOSE_EVENT
-    )
+    const SECONDARY_CLOSE_EVENT: Event = {
+      label: FULL_SECONDARY_LABEL,
+      func: (close: Close) => {
+        close()
+      }
+    }
+
+    const alert = new Alert(FULL_ALERT_CONTENT, PRIMARY_CLOSE_EVENT, SECONDARY_CLOSE_EVENT)
 
     const msgState = useMsgState()
     msgState.pushAlert(alert)
 
     expect(msgState.alerts.length).toBe(1)
+    expect(msgState.alerts[0].primaryLabel).toBe(FULL_PRIMARY_LABEL)
+    expect(msgState.alerts[0].secondaryLabel).toBe(FULL_SECONDARY_LABEL)
+    expect(msgState.alerts[0].hasPrimaryEvent).toBeTruthy()
+    expect(msgState.alerts[0].hasSecondaryEvent).toBeTruthy()
 
     msgState.alerts[0].callPrimaryEvent()
 
     expect(msgState.alerts.length).toBe(0)
   })
 
-  it('push notification', async () => {
+  it('alert: click two events', () => {
+    const FULL_ALERT_CONTENT = 'TECH NO BORDERS'
+    const FULL_PRIMARY_LABEL = 'PRIMARY'
+    const FULL_SECONDARY_LABEL = 'SECONDARY'
+
+    const PRIMARY_CLOSE_EVENT: Event = {
+      label: FULL_PRIMARY_LABEL,
+      func: (close: Close) => {
+        close()
+      }
+    }
+
+    const SECONDARY_CLOSE_EVENT: Event = {
+      label: FULL_SECONDARY_LABEL,
+      func: () => {}
+    }
+
+    const alert = new Alert(FULL_ALERT_CONTENT, PRIMARY_CLOSE_EVENT, SECONDARY_CLOSE_EVENT)
+
+    const msgState = useMsgState()
+    msgState.pushAlert(alert)
+
+    expect(msgState.alerts.length).toBe(1)
+    expect(msgState.alerts[0].primaryLabel).toBe(FULL_PRIMARY_LABEL)
+    expect(msgState.alerts[0].secondaryLabel).toBe(FULL_SECONDARY_LABEL)
+
+    msgState.alerts[0].callSecondaryEvent()
+    expect(msgState.alerts.length).toBe(1)
+
+    msgState.alerts[0].callPrimaryEvent()
+    expect(msgState.alerts.length).toBe(0)
+  })
+
+  it('notification: push notification', async () => {
     const EXPECTED_CONTENT = 'TECH HAS NO BORDERS'
     const EXPECT_DURATION = 1 // second
 

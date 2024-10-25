@@ -16,9 +16,9 @@ const msgState = useMsgState();
                 </svg>
                 <span>{{ alert.content }}</span>
                 <div>
-                    <button class="btn btn-sm" v-if="alert.alert.secondaryEvent !== null"
-                        @click="alert.callSecondaryEvent">{{ alert.secondaryLabel }}</button>
-                    <button class="btn btn-sm btn-primary" v-if="alert.alert.primaryEvent !== null"
+                    <button class="btn btn-sm" v-if="alert.hasSecondaryEvent" @click="alert.callSecondaryEvent">{{
+                        alert.secondaryLabel }}</button>
+                    <button class="btn btn-sm btn-primary" v-if="alert.hasPrimaryEvent"
                         @click="alert.callPrimaryEvent">{{ alert.primaryLabel }}</button>
                 </div>
             </div>

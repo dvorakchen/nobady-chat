@@ -26,7 +26,7 @@ export const useMsgState = defineStore('messageState', {
 })
 
 class AlertProxy {
-  constructor(public alert: Alert) {}
+  constructor(private alert: Alert) {}
 
   public id = Math.random()
 
@@ -35,11 +35,19 @@ class AlertProxy {
   }
 
   public get primaryLabel(): string {
-    return this.alert.primaryLabel
+    return this.alert.primaryEvent?.label ?? ''
   }
 
   public get secondaryLabel(): string {
-    return this.alert.secondaryLabel
+    return this.alert.secondaryEvent?.label ?? ''
+  }
+
+  public get hasPrimaryEvent(): boolean {
+    return this.alert.primaryEvent !== null
+  }
+
+  public get hasSecondaryEvent(): boolean {
+    return this.alert.secondaryEvent !== null
   }
 
   private _close = () => {
@@ -49,13 +57,13 @@ class AlertProxy {
 
   public callPrimaryEvent = () => {
     if (this.alert.primaryEvent !== null) {
-      this.alert.primaryEvent(this._close)
+      this.alert.primaryEvent.func(this._close)
     }
   }
 
   public callSecondaryEvent = () => {
     if (this.alert.secondaryEvent !== null) {
-      this.alert.secondaryEvent(this._close)
+      this.alert.secondaryEvent.func(this._close)
     }
   }
 }
@@ -69,9 +77,9 @@ class AlertProxy {
  * ```
  * const msgState = useMsgState()
  *
- * const alert = new Alert('show content', 'primary button', 'secondary button',
- *  (close) => { close() },
- *  (close) => { close() })
+ * const alert = new Alert('show content',
+ *  { label: 'primary',  func: (close) => { close() }},
+ *  { label: 'secondary',  func: (close) => { close() }},
  * msgState.pushAlert(new Alert())
  * ```
  */
@@ -79,10 +87,6 @@ export class Alert {
   constructor(
     /** content */
     public content = '',
-    /** the label of primary button */
-    public primaryLabel = '',
-    /** the label of secondary button */
-    public secondaryLabel = '',
     /**
      * the event of primary button, if null, the primary button would not display
      *
@@ -92,11 +96,11 @@ export class Alert {
      * ```
      * const msgState = useMsgState()
      *
-     * const alert = new Alert('show content', 'primary button', 'secondary button',
-     *  (close) => {
+     * const alert = new Alert('show content',
+     *  { label: 'primary', func: (close) => {
      *      close() //  alert would be closed
-     *    },
-     *  (close) => { close() })
+     *  }},
+     *  {label: 'secondary', func: (close) => { close() }})
      * msgState.pushAlert(new Alert())
      * ```
      * */
@@ -111,12 +115,12 @@ export class Alert {
      * const msgState = useMsgState()
      *
      * const alert = new Alert('show content', 'primary button', 'secondary button',
-     *  (close) => {
-     *     close() //  alert would be closed
-     *   },
-     *  (close) => {
-     *     close() //  alert would be closed
-     *  })
+     *
+     * const alert = new Alert('show content',
+     *  { label: 'primary', func: (close) => {
+     *      close() //  alert would be closed
+     *  }},
+     *  {label: 'secondary', func: (close) => { close() }})
      * msgState.pushAlert(new Alert())
      * ```
      * */
@@ -124,7 +128,10 @@ export class Alert {
   ) {}
 }
 
-export type Event = null | ((close: Close) => void)
+export type Event = null | {
+  label: string
+  func: (close: Close) => void
+}
 
 /**
  * call this function would close the alert
