@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useChatState } from '@/stores/chat_state';
-import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import MyBubble from '@/components/MyBubble.vue';
 import TheirBubble from '@/components/TheirBubble.vue';
 import IconVideo from '@/icons/video.vue'
@@ -13,40 +13,28 @@ const sentMsgEmit = defineEmits<{
     (e: 'sentMsg', msg: string): void
 }>()
 
-let bubbleList = useTemplateRef('bubble-list');
+// let bubbleList = useTemplateRef('bubble-list');
 
 let peerState = usePeerState();
 let chatState = useChatState();
 
 let records = computed(() => {
-    let talkToId = chatState.talkTo?.id;
-    if (!talkToId) {
-        return [];
-    }
-    return chatState.historyRecords.get(talkToId);
+    return chatState.talkTo?.records ?? [];
 })
 
 const sendMsg = ref('');
 
 onMounted(() => {
-    if (bubbleList.value?.children?.length ?? 0 > 0) {
-        bubbleList.value!.children[bubbleList.value!.children.length! - 1].scrollIntoView({
-            behavior: 'smooth'
-        })
-    }
+    chatState.bubbleListToEnd()
 })
 
 function handleSendMsg() {
     if (sendMsg.value.trim() === '' || chatState.talkTo === null) {
         return;
     }
-    chatState.sendNewMsg(chatState.talkTo.id, sendMsg.value)
+    chatState.talkTo.records.push(['', sendMsg.value])
     nextTick(() => {
-        if (bubbleList.value?.children?.length ?? 0 > 0) {
-            bubbleList.value!.children[bubbleList.value!.children.length! - 1].scrollIntoView({
-                behavior: 'smooth'
-            })
-        }
+        chatState.bubbleListToEnd();
     })
     sentMsgEmit('sentMsg', sendMsg.value);
     sendMsg.value = '';
@@ -54,7 +42,7 @@ function handleSendMsg() {
 
 function handleApplyVideo() {
     peerState.state = 'requesting';
-    peerState.oppositeId = chatState.talkTo!.id;
+    peerState.oppositeId = chatState.talkTo!.user.id;
 }
 
 const videoPosition = ref({
@@ -125,7 +113,7 @@ function handleVideoRemoveMoveEvent(ev: PointerEvent) {
         <div class="flex flex-col h-full space-y-2" v-if="chatState.talkTo !== null">
             <div class="p-4 flex">
                 <span class="text-lg font-bold flex-grow">Chat to:
-                    <span :data-userid="chatState.talkTo?.id">{{ chatState.talkTo?.name }}
+                    <span :data-userid="chatState.talkTo?.user.id">{{ chatState.talkTo?.user.name }}
                         <span class="text-accent" v-if="chatState.talkTo === null">(Offline)</span>
                     </span>
                 </span>

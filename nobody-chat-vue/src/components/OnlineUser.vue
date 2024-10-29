@@ -3,15 +3,16 @@ const { id, name, unread } = defineProps(['id', 'name', 'unread'])
 
 import { computed } from 'vue'
 
-import { useChatState, User } from '@/stores/chat_state';
+import { useChatState } from '@/stores/chat_state';
+import type { User } from '@/models';
 
 let chatState = useChatState();
 
 const isOwn = computed(() => {
-    return chatState?.user?.id === id;
+    return chatState.user.id === id;
 })
 function handleClickUser() {
-    if (isOwn.value || chatState.talkTo?.id === id) {
+    if (isOwn.value || chatState.talkTo?.user.id === id) {
         return;
     }
 

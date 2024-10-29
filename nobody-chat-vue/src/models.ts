@@ -4,9 +4,9 @@ export type OnlineUser = {
   unread: number
 }
 
-export type User = {
-  id: string
-  name: string
+export class User {
+  id: string = ''
+  name: string = ''
 }
 
 export type RecvMsg = {

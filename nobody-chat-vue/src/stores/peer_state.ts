@@ -57,7 +57,7 @@ export const usePeerState = defineStore('rtcPeer', {
       const chatState = useChatState()
       this.state = 'spare'
       let data = WebSocketData.newDeny(chatState.user.id, this.oppositeId)
-      chatState.socket.send(JSON.stringify(data))
+      // chatState.socket.send(JSON.stringify(data))
     },
     setThinking(signal: SignalInfo) {
       this.temporarySignal = signal
@@ -70,7 +70,7 @@ export const usePeerState = defineStore('rtcPeer', {
         const chatState = useChatState()
         this.oppositeId = this.temporarySignal.from_id
         const data = WebSocketData.newCanAccept(chatState.user.id, this.oppositeId)
-        chatState.socket.send(JSON.stringify(data))
+        // chatState.socket.send(JSON.stringify(data))
       }
     }
   }

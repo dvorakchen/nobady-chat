@@ -1,33 +1,31 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { getOnlineUsers } from '@/http'
-import OnlineUser from '@/components/OnlineUser.vue'
 import ChatBubbleBox from '@/components/ChatBubbleBox.vue'
 import { useChatState } from '@/stores/chat_state'
+import { useNetSocket } from '@/stores/socket_state'
 import Alerts from '@/components/message/Alerts.vue'
 import Notifications from '@/components/message/Notifications.vue'
-
-let socket: WebSocket;
+import { type OnlineUser as OnlineUserModel } from '@/models'
+import OnlineUser from '@/components/OnlineUser.vue'
 
 const chatState = useChatState();
+let socketState = useNetSocket();
 
 onMounted(async () => {
-  chatState.initSocket();
-  chatState.initOnlineUsers(await getOnlineUsers());
+  socketState.bindSocket();
+
+  const users = await getOnlineUsers()
+  const onlineUsers = users.map(u => ({ id: u.id, name: u.name, unread: 0 } as OnlineUserModel))
+  console.log(onlineUsers)
+  chatState.appendOnlineUsers(...onlineUsers);
+
 })
 
 function handleSentMsg(msg: string) {
   if (chatState.talkTo !== null) {
-    chatState.socket.send(JSON.stringify({
-      msg_type: {
-        talkTo: {
-          to: chatState.talkTo?.id,
-          msg: msg,
-        },
-      },
-    }));
+    socketState.sendTalkTo(chatState.talkTo.user.id, msg);
   }
-
 }
 
 </script>
@@ -69,8 +67,7 @@ function handleSentMsg(msg: string) {
             class="drawer-side z-10 max-h-full overflow-x-hidden overflow-y-scroll scrollbar-w-none md:scrollbar-w-auto md:pt-4 md:pr-4">
             <label for="online-list" aria-label="close sidebar" class="drawer-overlay"></label>
             <div class="bg-base-100 p-4 md:p-0 min-w-72 max-md:h-screen">
-              <ul class="space-y-2" id="online-user-list">
-
+              <ul class="space-y-2">
                 <OnlineUser v-for="{ id, name, unread } of chatState.onlineUsers" :id="id" :name="name" :unread="unread"
                   :key="id" />
 

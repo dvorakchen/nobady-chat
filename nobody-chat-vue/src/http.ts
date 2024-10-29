@@ -1,3 +1,4 @@
+import type { User } from './models'
 import type { SignalInfo } from './rtc'
 
 const ADDR = import.meta.env.VITE_API_ADDRESS
@@ -23,7 +24,7 @@ export function newConnection(): WebSocket {
   return socket
 }
 
-export async function getOnlineUsers(): Promise<OnlineUserModel[]> {
+export async function getOnlineUsers(): Promise<User[]> {
   let path = '/api/allonlineusers'
 
   if (ADDR.endsWith('/')) {
@@ -31,7 +32,7 @@ export async function getOnlineUsers(): Promise<OnlineUserModel[]> {
   }
 
   let resp = await fetch(`${location.protocol}//${ADDR}${path}`)
-  let data: OnlineUserModel[] = await resp.json()
+  let data: User[] = await resp.json()
 
   return data
 }

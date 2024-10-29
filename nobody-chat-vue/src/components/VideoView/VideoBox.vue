@@ -28,12 +28,12 @@ if (talkTo) {
 
 
 function requestVideoCommunicate() {
-    const signalData = WebSocketData.newRequestVideo(chatState.user.id, talkTo!.id)
+    const signalData = WebSocketData.newRequestVideo(chatState.user.id, talkTo!.user.id)
     peerState.requestTimeStamp = +signalData.msg_type.signal.value
-    peerState.oppositeId = talkTo!.id;
+    peerState.oppositeId = talkTo!.user.id;
     peerState.state = 'requesting'
 
-    chatState.socket.send(JSON.stringify(signalData))
+    // chatState.socket.send(JSON.stringify(signalData))
 }
 
 </script>

@@ -19,7 +19,7 @@ export function buildPeerConnection(): RTCPeerConnection {
       JSON.stringify(ev.candidate)
     )
 
-    chatState.socket.send(JSON.stringify(data))
+    // chatState.socket.send(JSON.stringify(data))
   }
 
   peerConnection.ontrack = (ev) => {
@@ -84,13 +84,13 @@ function handleRecvRequesting(signal: SignalInfo) {
   ) {
     if (peerState.requestTimeStamp <= +signal.value) {
       const data = WebSocketData.newRequestedFirst(chatState.user.id, peerState.oppositeId)
-      chatState.socket.send(JSON.stringify(data))
+      // chatState.socket.send(JSON.stringify(data))
     } else {
       peerState.state = 'spare'
     }
   } else if (peerState.isUsing) {
     const data = WebSocketData.newBusying(chatState.user.id, peerState.oppositeId)
-    chatState.socket.send(JSON.stringify(data))
+    // chatState.socket.send(JSON.stringify(data))
   }
 
   if (peerState.state === 'spare') {
@@ -133,7 +133,7 @@ async function handleRecvCanAccept(signal: SignalInfo) {
     JSON.stringify(peerState.peerConnection.localDescription)
   )
 
-  chatState.socket.send(JSON.stringify(data))
+  // chatState.socket.send(JSON.stringify(data))
 }
 
 async function handleRecvOffer(signal: SignalInfo) {
@@ -151,7 +151,7 @@ async function handleRecvOffer(signal: SignalInfo) {
 
   if (peerState.peerConnection.signalingState !== 'stable') {
     const data = WebSocketData.newBusying(chatState.user.id, peerState.oppositeId)
-    chatState.socket.send(JSON.stringify(data))
+    // chatState.socket.send(JSON.stringify(data))
     return
   }
 
@@ -175,7 +175,7 @@ async function handleRecvOffer(signal: SignalInfo) {
     JSON.stringify(localSDP)
   )
 
-  chatState.socket.send(JSON.stringify(data))
+  // chatState.socket.send(JSON.stringify(data))
 }
 
 async function handleRecvAnswer(signal: SignalInfo) {

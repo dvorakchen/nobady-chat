@@ -4,7 +4,14 @@
 import type { RecvMsg, User } from '@/models'
 import type { SignalInfo } from '@/rtc'
 
-export class NetSocket {
+export interface RegisterEventable {
+  registerEvent(
+    msgType: 'setUser' | 'userOnline' | 'msg' | 'userOffline' | 'signal',
+    event: Event
+  ): void
+}
+
+export class NetSocket implements RegisterEventable {
   private receivedEvent: Map<string, Event> = new Map()
   private socket: WebSocket
   private inited = false
@@ -22,7 +29,11 @@ export class NetSocket {
     }
   }
 
-  public async registerReceivedEvent(
+  public send(data: string) {
+    this.socket.send(data)
+  }
+
+  public async registerEvent(
     msgType: 'setUser' | 'userOnline' | 'msg' | 'userOffline' | 'signal',
     event: Event
   ) {
@@ -121,6 +132,24 @@ export class NetSocketRecvData {
 
     return res
   }
+
+  public static newUserOffline(user: User): NetSocketRecvData {
+    const res = new NetSocketRecvData()
+    res.msg_type = {
+      userOffline: user
+    } as UserOffline
+
+    return res
+  }
+
+  public static newSignal(signalInfo: SignalInfo): NetSocketRecvData {
+    const res = new NetSocketRecvData()
+    res.msg_type = {
+      signal: signalInfo
+    } as Signal
+
+    return res
+  }
 }
 
 export type NetSocketDataType = SetUser | UserOnline | Msg | UserOffline | Signal
@@ -143,4 +172,29 @@ export type UserOffline = {
 
 export type Signal = {
   signal: SignalInfo
+}
+
+export class NetSocketSendData {
+  public msg_type: NetSocketSendDataType = {} as NetSocketSendDataType
+
+  public static newTalkTo(to: string, msg: string): NetSocketSendData {
+    const res = new NetSocketSendData()
+    res.msg_type = {
+      talkTo: {
+        to,
+        msg
+      }
+    } as TalkTo
+
+    return res
+  }
+}
+
+export type NetSocketSendDataType = TalkTo
+
+export type TalkTo = {
+  talkTo: {
+    to: string
+    msg: string
+  }
 }
