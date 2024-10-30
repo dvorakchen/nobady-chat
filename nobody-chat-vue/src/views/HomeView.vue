@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { getOnlineUsers } from '@/http'
 import ChatBubbleBox from '@/components/ChatBubbleBox.vue'
 import { useChatState } from '@/stores/chat_state'
@@ -8,6 +8,7 @@ import Alerts from '@/components/message/Alerts.vue'
 import Notifications from '@/components/message/Notifications.vue'
 import { type OnlineUser as OnlineUserModel } from '@/models'
 import OnlineUser from '@/components/OnlineUser.vue'
+import isMobile from 'is-mobile'
 
 const chatState = useChatState();
 let socketState = useNetSocket();
@@ -17,9 +18,20 @@ onMounted(async () => {
 
   const users = await getOnlineUsers()
   const onlineUsers = users.map(u => ({ id: u.id, name: u.name, unread: 0 } as OnlineUserModel))
-  console.log(onlineUsers)
   chatState.appendOnlineUsers(...onlineUsers);
 
+})
+
+const allUnread = computed(() => {
+  if (isMobile()) {
+    const all = chatState.onlineUsers.map(u => u.unread).reduce((p, c) =>
+      p + c
+      , 0)
+    if (all > 0) {
+      return all;
+    }
+  }
+  return ''
 })
 
 function handleSentMsg(msg: string) {
@@ -47,6 +59,7 @@ function handleSentMsg(msg: string) {
             <div class="flex gap-4 w-full md:py-2 px-2">
               <label for="online-list" class="flex gap-2 max-md:btn text-lg font-bold cursor-pointer md:cursor-auto">
                 Online(s)
+                <div class="badge badge-accent" v-if="allUnread">{{ allUnread }}</div>
                 <span class="block w-7">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
                     <path fill-rule="evenodd"

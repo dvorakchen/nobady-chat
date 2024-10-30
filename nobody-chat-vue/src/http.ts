@@ -3,27 +3,6 @@ import type { SignalInfo } from './rtc'
 
 const ADDR = import.meta.env.VITE_API_ADDRESS
 
-export function newConnection(): WebSocket {
-  let protocol = 'ws'
-  let path = '/ws'
-
-  if (ADDR.endsWith('/')) {
-    path = path.substring(1)
-  }
-
-  protocol += location.protocol === 'https:' ? 's' : ''
-
-  const socket = new WebSocket(`${protocol}://${ADDR}${path}`)
-
-  socket.onopen = () => {}
-
-  socket.onerror = (ev) => {
-    console.error(ev)
-  }
-
-  return socket
-}
-
 export async function getOnlineUsers(): Promise<User[]> {
   let path = '/api/allonlineusers'
 

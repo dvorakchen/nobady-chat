@@ -188,9 +188,87 @@ export class NetSocketSendData {
 
     return res
   }
+
+  public static newSignalRequest(
+    from_id: string,
+    to_id: string,
+    timestamp: number
+  ): NetSocketSendData {
+    const res = new NetSocketSendData()
+    res.msg_type = {
+      signal: {
+        from_id,
+        to_id,
+        signal_type: 'requestVideo',
+        value: timestamp + ''
+      }
+    } as Signal
+
+    return res
+  }
+
+  public static newSignalDeny(from_id: string, to_id: string): NetSocketSendData {
+    const res = new NetSocketSendData()
+    res.msg_type = {
+      signal: {
+        from_id,
+        to_id,
+        signal_type: 'deny',
+        value: ''
+      }
+    } as Signal
+
+    return res
+  }
+
+  public static newSignalOffer(from_id: string, to_id: string, sdp: string): NetSocketSendData {
+    const res = new NetSocketSendData()
+    res.msg_type = {
+      signal: {
+        from_id,
+        to_id,
+        signal_type: 'offer',
+        value: sdp
+      }
+    } as Signal
+
+    return res
+  }
+
+  public static newSignalAnswer(from_id: string, to_id: string, sdp: string): NetSocketSendData {
+    const res = new NetSocketSendData()
+    res.msg_type = {
+      signal: {
+        from_id,
+        to_id,
+        signal_type: 'answer',
+        value: sdp
+      }
+    } as Signal
+
+    return res
+  }
+
+  public static newSignalCandidate(
+    from_id: string,
+    to_id: string,
+    candidate: string
+  ): NetSocketSendData {
+    const res = new NetSocketSendData()
+    res.msg_type = {
+      signal: {
+        from_id,
+        to_id,
+        signal_type: 'newCandidate',
+        value: candidate
+      }
+    } as Signal
+
+    return res
+  }
 }
 
-export type NetSocketSendDataType = TalkTo
+export type NetSocketSendDataType = TalkTo | Signal
 
 export type TalkTo = {
   talkTo: {

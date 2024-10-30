@@ -6,16 +6,15 @@ import TheirBubble from '@/components/TheirBubble.vue';
 import IconVideo from '@/icons/video.vue'
 import VideoBox from './VideoView/VideoBox.vue';
 import { usePeerState } from '@/stores/peer_state';
-import RequestAlert from './VideoView/RequestAlert.vue';
+import { useVideoState } from '@/stores/video_state';
 import { setOverScroll } from '@/utils';
+import type { User } from '@/models';
 
 const sentMsgEmit = defineEmits<{
     (e: 'sentMsg', msg: string): void
 }>()
 
-// let bubbleList = useTemplateRef('bubble-list');
-
-let peerState = usePeerState();
+const videoState = useVideoState();
 let chatState = useChatState();
 
 let records = computed(() => {
@@ -41,8 +40,9 @@ function handleSendMsg() {
 }
 
 function handleApplyVideo() {
-    peerState.state = 'requesting';
-    peerState.oppositeId = chatState.talkTo!.user.id;
+    videoState.to = chatState.talkTo!.user
+    videoState.state = 'offering'
+    videoState.sendOffer()
 }
 
 const videoPosition = ref({
@@ -70,7 +70,6 @@ const videoPositionStyle = computed(() => {
 function handlePointerStart(ev: PointerEvent) {
     let ele = ev.currentTarget as HTMLElement;
     setOverScroll(false);
-    console.log('false')
 
     startVideoPosition.x = ev.clientX;
     startVideoPosition.y = ev.clientY;
@@ -92,7 +91,6 @@ function handleVideoMove(ev: PointerEvent) {
 function handleVideoRemoveMoveEvent(ev: PointerEvent) {
     let ele = ev.currentTarget as HTMLElement;
     setOverScroll(true)
-    console.log('true')
 
     preVideoPosition.x = videoPosition.value.x;
     preVideoPosition.y = videoPosition.value.y;
@@ -117,8 +115,8 @@ function handleVideoRemoveMoveEvent(ev: PointerEvent) {
                         <span class="text-accent" v-if="chatState.talkTo === null">(Offline)</span>
                     </span>
                 </span>
-                <span class=" tooltip" :data-tip="`发起视频通话${peerState.isUsing ? '（忙碌中）' : ''}`">
-                    <button class="btn btn-ghost" :disabled="peerState.isUsing" @click="handleApplyVideo">
+                <span class=" tooltip" :data-tip="`发起视频通话${videoState.isShowScreen ? '（忙碌中）' : ''}`">
+                    <button class="btn btn-ghost" :disabled="videoState.isShowScreen" @click="handleApplyVideo">
                         <span class="w-8">
                             <icon-video />
                         </span>
@@ -141,14 +139,11 @@ function handleVideoRemoveMoveEvent(ev: PointerEvent) {
         </div>
     </div>
 
-    <teleport to="#app" v-if="peerState.isUsing">
+    <teleport to="#app" v-if="videoState.isShowScreen">
         <div class="fixed z-50 top-2 right-2 user-selection-none cursor-all-scroll w-80 aspect-[9/16]
          max-w-[50%]" @pointerdown.stop.prevent.passive="handlePointerStart" :style="videoPositionStyle">
             <VideoBox />
         </div>
     </teleport>
 
-    <Teleport to="#app" v-if="peerState.isThinking">
-        <RequestAlert />
-    </Teleport>
 </template>

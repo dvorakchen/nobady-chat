@@ -7,25 +7,25 @@ export function buildPeerConnection(): RTCPeerConnection {
 
   const peerConnection = new RTCPeerConnection(config)
 
-  peerConnection.onnegotiationneeded = (ev) => {}
+  // peerConnection.onnegotiationneeded = (ev) => {}
 
-  peerConnection.onicecandidate = (ev) => {
-    let peerState = usePeerState()
-    let chatState = useChatState()
+  // peerConnection.onicecandidate = (ev) => {
+  //   let peerState = usePeerState()
+  //   let chatState = useChatState()
 
-    let data = WebSocketData.newNewCandidate(
-      chatState.user.id,
-      peerState.oppositeId,
-      JSON.stringify(ev.candidate)
-    )
+  //   let data = WebSocketData.newNewCandidate(
+  //     chatState.user.id,
+  //     peerState.oppositeId,
+  //     JSON.stringify(ev.candidate)
+  //   )
 
-    // chatState.socket.send(JSON.stringify(data))
-  }
+  //   // chatState.socket.send(JSON.stringify(data))
+  // }
 
-  peerConnection.ontrack = (ev) => {
-    let peerState = usePeerState()
-    peerState.removeVideoRef!.srcObject = ev.streams[0]
-  }
+  // peerConnection.ontrack = (ev) => {
+  //   let peerState = usePeerState()
+  //   peerState.removeVideoRef!.srcObject = ev.streams[0]
+  // }
 
   return peerConnection
 }

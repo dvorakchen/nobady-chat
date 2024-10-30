@@ -40,6 +40,10 @@ export const useChatState = defineStore('ChatState', () => {
     register.registerEvent('signal', bindSignal)
   }
 
+  function findUsername(id: string): string {
+    return onlineUsers.value.find((u) => u.id === id)?.name ?? ''
+  }
+
   function bindSetUser(data: NetSocketDataType) {
     data = data as SetUser
 
@@ -156,7 +160,8 @@ export const useChatState = defineStore('ChatState', () => {
     newRecord,
     bindSocket,
     bubbleListToEnd,
-    appendOnlineUsers
+    appendOnlineUsers,
+    findUsername
   }
 })
 
