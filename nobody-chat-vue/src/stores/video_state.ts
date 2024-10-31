@@ -82,35 +82,35 @@ export const useVideoState = defineStore('videoState', () => {
     toUser.name = chatState.findUsername(toUser.id)
     to.value = toUser
 
-    let sdp = new RTCSessionDescription(JSON.parse(temporarySignal!.value))
-    await peerConnection.setRemoteDescription(sdp)
+    nextTick(async () => {
+      let sdp = new RTCSessionDescription(JSON.parse(temporarySignal!.value))
+      await peerConnection.setRemoteDescription(sdp)
 
-    let stream = await getMediaStreamPermission()
+      let stream = await getMediaStreamPermission()
 
-    if (stream === null) {
+      if (stream === null) {
+        const socket = useNetSocket()
+        const chatState = useChatState()
+        socket.sendSignalDeny(chatState.user.id, temporarySignal!.from_id)
+        return
+      }
+      localStream = stream
       const socket = useNetSocket()
-      const chatState = useChatState()
-      socket.sendSignalDeny(chatState.user.id, temporarySignal!.from_id)
-      return
-    }
-    localStream = stream
-    const socket = useNetSocket()
 
-    // nextTick(async () => {
-    localVideoRef!.srcObject = stream
-    for (const track of stream.getTracks()) {
-      peerConnection.addTrack(track, stream)
-    }
+      localVideoRef!.srcObject = stream
+      for (const track of stream.getTracks()) {
+        peerConnection.addTrack(track, stream)
+      }
 
-    const localSDP = await peerConnection.createAnswer()
-    await peerConnection.setLocalDescription(localSDP)
+      const localSDP = await peerConnection.createAnswer()
+      await peerConnection.setLocalDescription(localSDP)
 
-    socket.sendSignalAnswer(
-      chatState.user.id,
-      temporarySignal!.from_id,
-      JSON.stringify(peerConnection.localDescription)
-    )
-    // })
+      socket.sendSignalAnswer(
+        chatState.user.id,
+        temporarySignal!.from_id,
+        JSON.stringify(peerConnection.localDescription)
+      )
+    })
   }
 
   function askUser() {
