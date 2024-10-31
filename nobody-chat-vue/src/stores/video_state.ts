@@ -120,28 +120,28 @@ export const useVideoState = defineStore('videoState', () => {
     const name = chatState.findUsername(temporarySignal?.from_id ?? '')
 
     console.log('ask user')
-    msgState.pushAlert(
-      new Alert(
-        `${name} 请求视频通话`,
-        {
-          label: '接受',
-          func: async (close) => {
-            console.log('accept')
-            // send answer
-            await sendAnswer()
-            close()
-          }
-        },
-        {
-          label: '拒绝',
-          func: (close) => {
-            // send deny
-            socket.sendSignalDeny(chatState.user.id, temporarySignal!.from_id)
-            close()
-          }
-        }
-      )
-    )
+    // msgState.pushAlert(
+    //   new Alert(
+    //     `${name} 请求视频通话`,
+    //     {
+    //       label: '接受',
+    //       func: async (close) => {
+    //         console.log('accept')
+    //         // send answer
+    //         await sendAnswer()
+    //         close()
+    //       }
+    //     },
+    //     {
+    //       label: '拒绝',
+    //       func: (close) => {
+    //         // send deny
+    //         socket.sendSignalDeny(chatState.user.id, temporarySignal!.from_id)
+    //         close()
+    //       }
+    //     }
+    //   )
+    // )
   }
 
   const isShowScreen = computed(() => {
