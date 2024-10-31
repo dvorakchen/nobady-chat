@@ -2,8 +2,6 @@
 
 import { onMounted, useTemplateRef } from 'vue';
 import { useVideoState } from '@/stores/video_state';
-import type { User } from '@/models';
-
 
 let localVideoRef = useTemplateRef('video-ele')
 let remoteVideoRef = useTemplateRef('remote-video-ele')

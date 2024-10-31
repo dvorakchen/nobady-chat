@@ -119,6 +119,7 @@ export const useVideoState = defineStore('videoState', () => {
     const socket = useNetSocket()
     const name = chatState.findUsername(temporarySignal?.from_id ?? '')
 
+    console.log('ask user')
     msgState.pushAlert(
       new Alert(
         `${name} 请求视频通话`,
@@ -160,18 +161,19 @@ export const useVideoState = defineStore('videoState', () => {
     const signal = data.signal
 
     const chatState = useChatState()
-    if (to.value === null) {
-      const user = new User()
-      user.id = signal.from_id
-      user.name = chatState.findUsername(user.id)
-      to.value = user
-    }
 
     if (
       signal.to_id !== chatState.user.id ||
       (to.value !== null && signal.from_id !== to.value!.id)
     ) {
       return
+    }
+
+    if (to.value === null) {
+      const user = new User()
+      user.id = signal.from_id
+      user.name = chatState.findUsername(user.id)
+      to.value = user
     }
 
     switch (signal.signal_type) {
@@ -233,7 +235,7 @@ export const useVideoState = defineStore('videoState', () => {
     // }
 
     const value = JSON.parse(signalInfo.value)
-    console.log(value)
+    // console.log(value)
     // if (value === null || value.sdpMid === null || value.sdpMLineIndex === null) {
     //   return
     // }
