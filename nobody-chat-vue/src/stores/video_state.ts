@@ -199,6 +199,7 @@ export const useVideoState = defineStore('videoState', () => {
       //  ask user
       askUser()
     } else {
+      console.log('state: ', state)
       const socket = useNetSocket()
       const chatState = useChatState()
       await peerConnection.setRemoteDescription(
