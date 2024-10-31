@@ -1,8 +1,7 @@
 /// NetSocket
 /// Wrapped WebSocket
 
-import type { RecvMsg, User } from '@/models'
-import type { SignalInfo } from '@/rtc'
+import type { RecvMsg, SignalInfo, User } from '@/models'
 
 export interface RegisterEventable {
   registerEvent(

@@ -30,7 +30,6 @@ export const useChatState = defineStore('ChatState', () => {
   const user = ref<User>(new User())
   const historyRecords = ref<HistoryRecords>(new HistoryRecords())
   const talkTo = ref<TalkTo | null>(null)
-  const bubbleList: ShallowRef<HTMLUListElement | null> = useTemplateRef('bubble-list')
 
   function bindSocket(register: RegisterEventable) {
     register.registerEvent('setUser', bindSetUser)
@@ -134,10 +133,17 @@ export const useChatState = defineStore('ChatState', () => {
   }
 
   function bubbleListToEnd() {
-    if (bubbleList.value?.children?.length ?? 0 > 0) {
-      bubbleList.value?.children[bubbleList.value.children.length! - 1].scrollIntoView({
-        behavior: 'smooth'
-      })
+    scrollToEnd()
+  }
+
+  let scrollToEnd = () => {
+    const list = document.getElementById('bubbleList')
+    if (list && list.children.length > 0) {
+      scrollToEnd = () => {
+        list.children[list.children.length - 1].scrollIntoView({
+          behavior: 'smooth'
+        })
+      }
     }
   }
 
@@ -152,7 +158,6 @@ export const useChatState = defineStore('ChatState', () => {
   }
 
   return {
-    bubbleList,
     onlineUsers,
     user,
     talkTo,

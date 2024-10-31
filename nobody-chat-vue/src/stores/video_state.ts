@@ -1,6 +1,5 @@
-import { User } from '@/models'
+import { User, type SignalInfo } from '@/models'
 import type { NetSocketDataType, RegisterEventable, Signal } from '@/net/netsocket'
-import { buildPeerConnection, type SignalInfo } from '@/rtc'
 import { defineStore } from 'pinia'
 import { computed, nextTick, ref } from 'vue'
 import { useChatState } from './chat_state'
@@ -14,7 +13,8 @@ export const useVideoState = defineStore('videoState', () => {
   let localVideoRef: null | HTMLVideoElement = null
   let remoteVideoRef: null | HTMLVideoElement = null
   let temporarySignal: null | SignalInfo = null
-  let requestTimeStamp = 0
+  let localStream: null | MediaStream = null
+  let remoteStream: null | MediaStream = null
   const peerConnection = buildPeerConnection()
 
   configPeer()
@@ -35,6 +35,7 @@ export const useVideoState = defineStore('videoState', () => {
 
     peerConnection.ontrack = (ev) => {
       const stream = ev.streams[0]
+      remoteStream = stream
       remoteVideoRef!.srcObject = stream
     }
 
@@ -56,6 +57,7 @@ export const useVideoState = defineStore('videoState', () => {
       return
     }
 
+    localStream = stream
     localVideoRef!.srcObject = stream
     for (const track of stream.getTracks()) {
       peerConnection.addTrack(track, stream)
@@ -88,6 +90,7 @@ export const useVideoState = defineStore('videoState', () => {
       socket.sendSignalDeny(chatState.user.id, temporarySignal!.from_id)
       return
     }
+    localStream = stream
     const socket = useNetSocket()
 
     nextTick(async () => {
@@ -185,7 +188,6 @@ export const useVideoState = defineStore('videoState', () => {
       askUser()
     } else if (state === 'communicating') {
       //  reoffer
-      console.log('reoffer')
       await peerConnection.setRemoteDescription(
         new RTCSessionDescription(JSON.parse(signalInfo.value))
       )
@@ -229,23 +231,20 @@ export const useVideoState = defineStore('videoState', () => {
     localVideoRef = local
     remoteVideoRef = remote
   }
-  async function startVideo() {
-    requestTimeStamp = new Date().getTime()
 
-    let stream = await getMediaStreamPermission()
-    if (stream === null) {
-      return
-    }
-
-    localVideoRef!.srcObject = stream
-    for (const track of stream.getTracks()) {
-      peerConnection.addTrack(track, stream)
-    }
-  }
   function hangUp() {
     to.value = null
-    requestTimeStamp = 0
     state = 'free'
+    if (localStream !== null) {
+      for (const track of localStream.getTracks()) {
+        track.stop()
+      }
+    }
+    if (remoteStream !== null) {
+      for (const track of remoteStream.getTracks()) {
+        track.stop()
+      }
+    }
     if (localVideoRef !== null) {
       localVideoRef.srcObject = null
       localVideoRef = null
@@ -264,7 +263,6 @@ export const useVideoState = defineStore('videoState', () => {
     isShowScreen,
     bindSocket,
     setVideoElements,
-    startVideo,
     hangUp,
     sendOffer
   }
@@ -276,3 +274,25 @@ export type VideoState =
   | 'offering' /* negotiating */
   | 'waitOffering' /* applied a request, wait for onswer of opposite */
   | 'communicating' /* connection successful, communicating */
+
+export function buildPeerConnection(): RTCPeerConnection {
+  const config = peerConfig()
+
+  const peerConnection = new RTCPeerConnection(config)
+
+  return peerConnection
+}
+
+function peerConfig(): RTCConfiguration {
+  const config = {
+    iceServers: [
+      {
+        urls: [import.meta.env.VITE_TURN_URL],
+        username: import.meta.env.VITE_TURN_USERNAME,
+        credential: import.meta.env.VITE_TURN_CREDENTIAL
+      }
+    ]
+  }
+
+  return config
+}

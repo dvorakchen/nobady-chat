@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { useChatState } from '@/stores/chat_state';
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUpdated, ref } from 'vue';
 import MyBubble from '@/components/MyBubble.vue';
 import TheirBubble from '@/components/TheirBubble.vue';
 import IconVideo from '@/icons/video.vue'
 import VideoBox from './VideoView/VideoBox.vue';
-import { usePeerState } from '@/stores/peer_state';
 import { useVideoState } from '@/stores/video_state';
 import { setOverScroll } from '@/utils';
-import type { User } from '@/models';
 
 const sentMsgEmit = defineEmits<{
     (e: 'sentMsg', msg: string): void
@@ -23,7 +21,7 @@ let records = computed(() => {
 
 const sendMsg = ref('');
 
-onMounted(() => {
+onUpdated(() => {
     chatState.bubbleListToEnd()
 })
 
@@ -32,9 +30,6 @@ function handleSendMsg() {
         return;
     }
     chatState.talkTo.records.push(['', sendMsg.value])
-    nextTick(() => {
-        chatState.bubbleListToEnd();
-    })
     sentMsgEmit('sentMsg', sendMsg.value);
     sendMsg.value = '';
 }
