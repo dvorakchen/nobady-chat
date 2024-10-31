@@ -35,12 +35,15 @@ export const useVideoState = defineStore('videoState', () => {
     }
 
     peerConnection.ontrack = (ev) => {
+      console.log('ontrack')
       const stream = ev.streams[0]
       remoteStream = stream
       remoteVideoRef!.srcObject = stream
     }
 
     peerConnection.onicecandidate = (ev) => {
+      console.log('onicecandidate')
+
       if (!ev.candidate) {
         return
       }
@@ -120,28 +123,29 @@ export const useVideoState = defineStore('videoState', () => {
     const name = chatState.findUsername(temporarySignal?.from_id ?? '')
 
     console.log('ask user')
-    // msgState.pushAlert(
-    //   new Alert(
-    //     `${name} 请求视频通话`,
-    //     {
-    //       label: '接受',
-    //       func: async (close) => {
-    //         console.log('accept')
-    //         // send answer
-    //         await sendAnswer()
-    //         close()
-    //       }
-    //     },
-    //     {
-    //       label: '拒绝',
-    //       func: (close) => {
-    //         // send deny
-    //         socket.sendSignalDeny(chatState.user.id, temporarySignal!.from_id)
-    //         close()
-    //       }
-    //     }
-    //   )
-    // )
+    console.log('remote Video Element: ', remoteVideoRef)
+    msgState.pushAlert(
+      new Alert(
+        `${name} 请求视频通话`,
+        {
+          label: '接受',
+          func: async (close) => {
+            console.log('accept')
+            // send answer
+            await sendAnswer()
+            close()
+          }
+        },
+        {
+          label: '拒绝',
+          func: (close) => {
+            // send deny
+            socket.sendSignalDeny(chatState.user.id, temporarySignal!.from_id)
+            close()
+          }
+        }
+      )
+    )
   }
 
   const isShowScreen = computed(() => {
@@ -199,7 +203,6 @@ export const useVideoState = defineStore('videoState', () => {
       //  ask user
       askUser()
     } else {
-      console.log('state: ', state)
       const socket = useNetSocket()
       const chatState = useChatState()
       await peerConnection.setRemoteDescription(
