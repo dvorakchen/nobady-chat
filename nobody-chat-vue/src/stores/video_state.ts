@@ -125,6 +125,7 @@ export const useVideoState = defineStore('videoState', () => {
         {
           label: '接受',
           func: async (close) => {
+            console.log('accept')
             // send answer
             await sendAnswer()
             close()
