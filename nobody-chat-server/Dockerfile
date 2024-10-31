@@ -1,7 +1,7 @@
 ARG RUST_VERSION=1.81
 ARG APP_NAME=nobody-chat
 
-FROM dockerproxy.cn/rust:${RUST_VERSION}-slim AS chef
+FROM hub.aiursoft.cn/rust:${RUST_VERSION}-slim AS chef
 LABEL author="DvorakChen"
 LABEL email="dvorakchen@outlook.com"
 
@@ -32,7 +32,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN cargo build --release
 
-FROM dockerproxy.cn/debian:stable-slim AS final
+FROM hub.aiursoft.cn/debian:stable-slim AS final
 
 ARG APP_NAME
 
