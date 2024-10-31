@@ -21,6 +21,7 @@ export const useVideoState = defineStore('videoState', () => {
 
   function configPeer() {
     peerConnection.onnegotiationneeded = async (ev) => {
+      console.log('onnegotiation')
       if (to.value === null) {
         return
       }
@@ -40,7 +41,7 @@ export const useVideoState = defineStore('videoState', () => {
     }
 
     peerConnection.onicecandidate = (ev) => {
-      if (to.value === null) {
+      if (!ev.candidate) {
         return
       }
 
@@ -52,6 +53,7 @@ export const useVideoState = defineStore('videoState', () => {
   }
 
   async function sendOffer() {
+    state = 'offering'
     const stream = await getMediaStreamPermission()
     if (stream === null) {
       to.value = null
@@ -94,21 +96,21 @@ export const useVideoState = defineStore('videoState', () => {
     localStream = stream
     const socket = useNetSocket()
 
-    nextTick(async () => {
-      localVideoRef!.srcObject = stream
-      for (const track of stream.getTracks()) {
-        peerConnection.addTrack(track, stream)
-      }
+    // nextTick(async () => {
+    localVideoRef!.srcObject = stream
+    for (const track of stream.getTracks()) {
+      peerConnection.addTrack(track, stream)
+    }
 
-      const localSDP = await peerConnection.createAnswer()
-      await peerConnection.setLocalDescription(localSDP)
+    const localSDP = await peerConnection.createAnswer()
+    await peerConnection.setLocalDescription(localSDP)
 
-      socket.sendSignalAnswer(
-        chatState.user.id,
-        temporarySignal!.from_id,
-        JSON.stringify(peerConnection.localDescription)
-      )
-    })
+    socket.sendSignalAnswer(
+      chatState.user.id,
+      temporarySignal!.from_id,
+      JSON.stringify(peerConnection.localDescription)
+    )
+    // })
   }
 
   function askUser() {
@@ -154,10 +156,16 @@ export const useVideoState = defineStore('videoState', () => {
 
   async function handleSignal(data: NetSocketDataType) {
     data = data as Signal
+    const signal = data.signal
 
     const chatState = useChatState()
+    if (to.value === null) {
+      const user = new User()
+      user.id = signal.from_id
+      user.name = chatState.findUsername(user.id)
+      to.value = user
+    }
 
-    const signal = data.signal
     if (
       signal.to_id !== chatState.user.id ||
       (to.value !== null && signal.from_id !== to.value!.id)
@@ -182,19 +190,26 @@ export const useVideoState = defineStore('videoState', () => {
   }
 
   async function handleOffer(signalInfo: SignalInfo) {
-    const socket = useNetSocket()
+    console.log('handleOffer: ', state)
     if (state === 'free') {
       temporarySignal = signalInfo
       //  ask user
       askUser()
-    } else if (state === 'communicating') {
-      //  reoffer
+    } else {
+      const socket = useNetSocket()
+      const chatState = useChatState()
       await peerConnection.setRemoteDescription(
         new RTCSessionDescription(JSON.parse(signalInfo.value))
       )
-    } else {
-      // apply deny
-      socket.sendSignalDeny(signalInfo.from_id, signalInfo.to_id)
+
+      const answer = await peerConnection.createAnswer()
+      await peerConnection.setLocalDescription(answer)
+
+      socket.sendSignalAnswer(
+        chatState.user.id,
+        to.value!.id,
+        JSON.stringify(peerConnection.localDescription)
+      )
     }
   }
 
@@ -212,18 +227,19 @@ export const useVideoState = defineStore('videoState', () => {
   }
 
   async function handleNewCandidate(signalInfo: SignalInfo) {
-    if (peerConnection.remoteDescription === null) {
-      return
-    }
+    // if (peerConnection.remoteDescription === null) {
+    //   return
+    // }
 
     const value = JSON.parse(signalInfo.value)
-    if (value === null || value.sdpMid === null || value.sdpMLineIndex === null) {
-      return
-    }
+    console.log(value)
+    // if (value === null || value.sdpMid === null || value.sdpMLineIndex === null) {
+    //   return
+    // }
     const candidate = new RTCIceCandidate(value)
-    if (candidate.sdpMid === null || candidate.sdpMLineIndex === null) {
-      return
-    }
+    // if (candidate.sdpMid === null || candidate.sdpMLineIndex === null) {
+    //   return
+    // }
 
     await peerConnection.addIceCandidate(candidate)
   }
