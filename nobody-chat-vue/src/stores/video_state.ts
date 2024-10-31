@@ -86,6 +86,7 @@ export const useVideoState = defineStore('videoState', () => {
     to.value = toUser
 
     nextTick(async () => {
+      console.log('remote Video Element: ', remoteVideoRef)
       let sdp = new RTCSessionDescription(JSON.parse(temporarySignal!.value))
       await peerConnection.setRemoteDescription(sdp)
 
@@ -116,36 +117,37 @@ export const useVideoState = defineStore('videoState', () => {
     })
   }
 
-  function askUser() {
+  async function askUser() {
     const msgState = useMsgState()
     const chatState = useChatState()
     const socket = useNetSocket()
     const name = chatState.findUsername(temporarySignal?.from_id ?? '')
 
     console.log('ask user')
-    console.log('remote Video Element: ', remoteVideoRef)
-    msgState.pushAlert(
-      new Alert(
-        `${name} 请求视频通话`,
-        {
-          label: '接受',
-          func: async (close) => {
-            console.log('accept')
-            // send answer
-            await sendAnswer()
-            close()
-          }
-        },
-        {
-          label: '拒绝',
-          func: (close) => {
-            // send deny
-            socket.sendSignalDeny(chatState.user.id, temporarySignal!.from_id)
-            close()
-          }
-        }
-      )
-    )
+    // console.log('remote Video Element: ', remoteVideoRef)
+    await sendAnswer()
+    // msgState.pushAlert(
+    //   new Alert(
+    //     `${name} 请求视频通话`,
+    //     {
+    //       label: '接受',
+    //       func: async (close) => {
+    //         console.log('accept')
+    //         // send answer
+    //         await sendAnswer()
+    //         close()
+    //       }
+    //     },
+    //     {
+    //       label: '拒绝',
+    //       func: (close) => {
+    //         // send deny
+    //         socket.sendSignalDeny(chatState.user.id, temporarySignal!.from_id)
+    //         close()
+    //       }
+    //     }
+    //   )
+    // )
   }
 
   const isShowScreen = computed(() => {
@@ -161,6 +163,7 @@ export const useVideoState = defineStore('videoState', () => {
   }
 
   async function handleSignal(data: NetSocketDataType) {
+    console.log('handleSignal', data)
     data = data as Signal
     const signal = data.signal
 
@@ -201,7 +204,7 @@ export const useVideoState = defineStore('videoState', () => {
     if (state === 'free') {
       temporarySignal = signalInfo
       //  ask user
-      askUser()
+      await askUser()
     } else {
       const socket = useNetSocket()
       const chatState = useChatState()
