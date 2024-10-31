@@ -10,7 +10,14 @@ export async function getMediaStreamPermission(): Promise<MediaStream | null> {
     return stream
   } catch (ex) {
     const msgState = useMsgState()
-    msgState.pushAlert(new Alert(`获取摄像头权限失败，请通过`))
+    msgState.pushAlert(
+      new Alert(`获取摄像头权限失败，请通过`, {
+        label: '确认',
+        func: (close) => {
+          close()
+        }
+      })
+    )
     return null
   }
 }

@@ -54,6 +54,7 @@ export const useVideoState = defineStore('videoState', () => {
   async function sendOffer() {
     const stream = await getMediaStreamPermission()
     if (stream === null) {
+      to.value = null
       return
     }
 
