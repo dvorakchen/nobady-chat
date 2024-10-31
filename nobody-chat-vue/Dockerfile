@@ -1,6 +1,6 @@
 
 # cache npm
-FROM dockerproxy.cn/node:22-alpine as npm-env
+FROM hub.aiursoft.cn/node:21-slim as npm-env
 
 WORKDIR /app
 
