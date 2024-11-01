@@ -35,6 +35,12 @@ export const useNetSocket = defineStore('netSocket', {
     sendSignalCandidate(from_id: string, to_id: string, candidate: string) {
       const data = JSON.stringify(NetSocketSendData.newSignalCandidate(from_id, to_id, candidate))
       this.netSocket.send(data)
+    },
+    sendSignalRequest(from_id: string, to_id: string) {
+      const data = JSON.stringify(
+        NetSocketSendData.newSignalRequest(from_id, to_id, new Date().getTime())
+      )
+      this.netSocket.send(data)
     }
   }
 })

@@ -9,8 +9,8 @@ export async function getOnlineUsers(): Promise<User[]> {
     path = path.substring(1)
   }
 
-  let resp = await fetch(`${location.protocol}//${ADDR}${path}`)
-  let data: User[] = await resp.json()
+  const resp = await fetch(`${location.protocol}//${ADDR}${path}`)
+  const data: User[] = await resp.json()
 
   return data
 }

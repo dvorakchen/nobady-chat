@@ -4,7 +4,7 @@ import { nextTick, ref, useTemplateRef, type ShallowRef } from 'vue'
 import type {
   Msg,
   NetSocketDataType,
-  RegisterEventable,
+  RegisterSocketEventable,
   SetUser,
   UserOffline,
   UserOnline
@@ -31,7 +31,7 @@ export const useChatState = defineStore('ChatState', () => {
   const historyRecords = ref<HistoryRecords>(new HistoryRecords())
   const talkTo = ref<TalkTo | null>(null)
 
-  function bindSocket(register: RegisterEventable) {
+  function bindSocket(register: RegisterSocketEventable) {
     register.registerEvent('setUser', bindSetUser)
     register.registerEvent('userOnline', bindUserOnline)
     register.registerEvent('msg', bindMsg)
@@ -72,7 +72,7 @@ export const useChatState = defineStore('ChatState', () => {
     const { from, msg } = data.msg
     const fromId = from
 
-    let record = historyRecords.value.get(fromId)
+    const record = historyRecords.value.get(fromId)
     record.push([msg, ''])
 
     if (talkTo.value?.user.id !== fromId) {
@@ -86,7 +86,7 @@ export const useChatState = defineStore('ChatState', () => {
     }
 
     nextTick(() => {
-      let list = document.getElementById('bubbleList')
+      const list = document.getElementById('bubbleList')
       if (list?.children?.length ?? 0 > 0) {
         list?.children[list.children.length! - 1].scrollIntoView({
           behavior: 'smooth'
@@ -124,7 +124,7 @@ export const useChatState = defineStore('ChatState', () => {
 
     talkTo.value = newTalkTo
 
-    let tmpUser = onlineUsers.value.find((u) => u.id === user.id)
+    const tmpUser = onlineUsers.value.find((u) => u.id === user.id)
     tmpUser && (tmpUser.unread = 0)
   }
 

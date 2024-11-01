@@ -1,20 +1,36 @@
 import { User, type SignalInfo } from '@/models'
-import type { NetSocketDataType, RegisterEventable, Signal } from '@/net/netsocket'
+import type { NetSocketDataType, RegisterSocketEventable, Signal } from '@/net/netsocket'
 import { defineStore } from 'pinia'
 import { computed, nextTick, ref } from 'vue'
 import { useChatState } from './chat_state'
 import { useNetSocket } from './socket_state'
 import { Alert, Notification, useMsgState } from './message_state'
 import { getMediaStreamPermission } from '@/utils'
+import type { One2OneSignalServer } from '@/signal/one2one'
+import { RTC121 } from '@/signal/rtc_121'
+import { NormalSS } from '@/signal/signaling_server'
+
+export const defineOne2OneVideo = (signalServer: One2OneSignalServer) => {
+  return defineStore('videoState', () => {
+    const server = signalServer
+  })
+}
+
+// export const useVideo = defineOne2OneVideo(new RTC121('', ''))
 
 export const useVideoState = defineStore('videoState', () => {
-  let to = ref(null as null | User)
+  const to = ref(null as null | User)
   let state: VideoState = 'free' as VideoState
   let localVideoRef: null | HTMLVideoElement = null
   let remoteVideoRef: null | HTMLVideoElement = null
   let temporarySignal: null | SignalInfo = null
   let localStream: null | MediaStream = null
   let remoteStream: null | MediaStream = null
+  const user = computed(() => {
+    const chatState = useChatState()
+    return chatState.user
+  })
+
   const peerConnection = buildPeerConnection()
 
   configPeer()
@@ -70,7 +86,7 @@ export const useVideoState = defineStore('videoState', () => {
     }
 
     await peerConnection.setLocalDescription()
-    let sdp = peerConnection.localDescription
+    const sdp = peerConnection.localDescription
     const socket = useNetSocket()
     const chatState = useChatState()
 
@@ -87,10 +103,10 @@ export const useVideoState = defineStore('videoState', () => {
 
     nextTick(async () => {
       console.log('remote Video Element: ', remoteVideoRef)
-      let sdp = new RTCSessionDescription(JSON.parse(temporarySignal!.value))
+      const sdp = new RTCSessionDescription(JSON.parse(temporarySignal!.value))
       await peerConnection.setRemoteDescription(sdp)
 
-      let stream = await getMediaStreamPermission()
+      const stream = await getMediaStreamPermission()
 
       if (stream === null) {
         const socket = useNetSocket()
@@ -158,7 +174,7 @@ export const useVideoState = defineStore('videoState', () => {
     return state !== 'communicating'
   })
 
-  function bindSocket(register: RegisterEventable) {
+  function bindSocket(register: RegisterSocketEventable) {
     register.registerEvent('signal', handleSignal)
   }
 
@@ -184,6 +200,8 @@ export const useVideoState = defineStore('videoState', () => {
     }
 
     switch (signal.signal_type) {
+      case 'requestVideo':
+        break
       case 'offer':
         await handleOffer(signal)
         break
@@ -199,8 +217,13 @@ export const useVideoState = defineStore('videoState', () => {
     }
   }
 
+  async function handleRequestVideo() {
+    if (state !== 'free') {
+      return
+    }
+  }
+
   async function handleOffer(signalInfo: SignalInfo) {
-    console.log('handleOffer: ', state)
     if (state === 'free') {
       temporarySignal = signalInfo
       //  ask user
@@ -231,7 +254,7 @@ export const useVideoState = defineStore('videoState', () => {
   }
 
   async function handleAnswer(signalInfo: SignalInfo) {
-    let sdp = JSON.parse(signalInfo.value)
+    const sdp = JSON.parse(signalInfo.value)
     await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp))
     state = 'communicating'
   }

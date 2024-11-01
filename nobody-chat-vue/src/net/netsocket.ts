@@ -3,20 +3,24 @@
 
 import type { RecvMsg, SignalInfo, User } from '@/models'
 
-export interface RegisterEventable {
+export interface RegisterSocketEventable {
   registerEvent(
     msgType: 'setUser' | 'userOnline' | 'msg' | 'userOffline' | 'signal',
     event: Event
   ): void
 }
 
-export class NetSocket implements RegisterEventable {
+export interface SocketSendable {
+  send(data: string): void
+}
+
+export class NetSocket implements RegisterSocketEventable, SocketSendable {
   private receivedEvent: Map<string, Event> = new Map()
   private socket: WebSocket
   private inited = false
 
-  constructor() {
-    this.socket = newConnection()
+  constructor(socket: WebSocket = newConnection()) {
+    this.socket = socket
 
     this.socket.onmessage = (ev) => {
       const data: NetSocketRecvData = JSON.parse(ev.data)
@@ -67,7 +71,7 @@ export class NetSocket implements RegisterEventable {
       return
     }
 
-    let keys = Object.keys(data.msg_type)
+    const keys = Object.keys(data.msg_type)
     if (keys.length !== 1) {
       throw "Type error: msg_type's key count shoud be one"
     }

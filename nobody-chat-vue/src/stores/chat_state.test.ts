@@ -1,11 +1,11 @@
-import { describe, expect, it, beforeEach } from 'vitest'
+import { describe, expect, it, beforeEach, vi } from 'vitest'
 import { useChatState } from './chat_state'
 import { createPinia, setActivePinia } from 'pinia'
 import { User } from '@/models'
 import type {
   Msg,
   NetSocketDataType,
-  RegisterEventable,
+  RegisterSocketEventable,
   SetUser,
   UserOnline
 } from '@/net/netsocket'
@@ -180,15 +180,17 @@ describe('test socket', () => {
   })
 })
 
-class FakeSocket implements RegisterEventable {
-  private bulk = new Map()
+const FakeSocket = vi.fn()
+
+FakeSocket.mockImplementation(() => ({
+  bulk: new Map(),
 
   registerEvent(
     msgType: 'setUser' | 'userOnline' | 'msg' | 'userOffline' | 'signal',
     event: (entry: NetSocketDataType) => void
   ): void {
     this.bulk.set(msgType, event)
-  }
+  },
 
   emit(
     msgType: 'setUser' | 'userOnline' | 'msg' | 'userOffline' | 'signal',
@@ -196,4 +198,4 @@ class FakeSocket implements RegisterEventable {
   ) {
     this.bulk.get(msgType)?.(entry)
   }
-}
+}))
