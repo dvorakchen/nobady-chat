@@ -15,6 +15,8 @@ export class RTC121 implements One2OneSignalServer {
   private answerHandler: Handler = async () => true
   private denyHandler: Handler = async () => true
 
+  private iceCandidateBuffer: RTCIceCandidate[] = []
+
   constructor(
     localVideo: Selector,
     remoteVideo: Selector,
@@ -59,6 +61,15 @@ export class RTC121 implements One2OneSignalServer {
     }
   }
 
+  private cleanICECandidateBuffer() {
+    if (this.pc.remoteDescription) {
+      console.log('clear')
+      this.iceCandidateBuffer.forEach((c) => {
+        this.pc.addIceCandidate(c)
+      })
+    }
+  }
+
   private registerHandler() {
     this.ss.registerEvent('requestVideo', async (si) => {
       if (!(await this.requestHandler(si))) {
@@ -92,8 +103,16 @@ export class RTC121 implements One2OneSignalServer {
       }
     })
     this.ss.registerEvent('newCandidate', async (si) => {
-      const candidate = JSON.parse(si.value)
-      await this.pc.addIceCandidate(new RTCIceCandidate(candidate))
+      const candidate = new RTCIceCandidate(JSON.parse(si.value))
+
+      if (this.pc.remoteDescription) {
+        await this.pc.addIceCandidate(candidate)
+        this.iceCandidateBuffer.forEach((c) => {
+          this.pc.addIceCandidate(c)
+        })
+      } else {
+        this.iceCandidateBuffer.push(candidate)
+      }
     })
   }
 
@@ -138,6 +157,7 @@ export class RTC121 implements One2OneSignalServer {
     let sdp = await this.pc.createAnswer()
     await this.pc.setLocalDescription(sdp)
 
+    this.cleanICECandidateBuffer()
     this.ss.sendSignalAnswer(this.base!.from_id, this.base!.to_id, JSON.stringify(sdp))
   }
 
