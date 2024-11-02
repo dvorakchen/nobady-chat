@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useChatState } from '@/stores/chat_state';
-import { computed, nextTick, onMounted, onUpdated, ref } from 'vue';
+import { computed, onUpdated, ref } from 'vue';
 import MyBubble from '@/components/MyBubble.vue';
 import TheirBubble from '@/components/TheirBubble.vue';
 import IconVideo from '@/icons/video.vue'
@@ -36,8 +36,7 @@ function handleSendMsg() {
 
 function handleApplyVideo() {
     videoState.to = chatState.talkTo!.user
-    videoState.state = 'offering'
-    videoState.sendOffer()
+    videoState.requestVideoCommunicate()
 }
 
 const videoPosition = ref({
@@ -134,9 +133,10 @@ function handleVideoRemoveMoveEvent(ev: PointerEvent) {
         </div>
     </div>
 
-    <teleport to="#app" v-if="videoState.isShowScreen">
+    <teleport to="#app">
         <div class="fixed z-50 top-2 right-2 user-selection-none cursor-all-scroll w-80 aspect-[9/16]
-         max-w-[50%]" @pointerdown.stop.prevent.passive="handlePointerStart" :style="videoPositionStyle">
+         max-w-[50%]" v-show="videoState.isShowScreen" @pointerdown.stop.prevent.passive="handlePointerStart"
+            :style="videoPositionStyle">
             <VideoBox />
         </div>
     </teleport>

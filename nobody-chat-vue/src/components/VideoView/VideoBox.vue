@@ -1,16 +1,9 @@
 <script lang="ts" setup>
 
-import { onMounted, useTemplateRef } from 'vue';
 import { useVideoState } from '@/stores/video_state';
-
-let localVideoRef = useTemplateRef('video-ele')
-let remoteVideoRef = useTemplateRef('remote-video-ele')
 
 const videoState = useVideoState();
 
-onMounted(async () => {
-    videoState.setVideoElements(localVideoRef.value, remoteVideoRef.value)
-})
 
 function handleHangUp() {
     videoState.hangUp()
@@ -28,8 +21,9 @@ function handleHangUp() {
                         v-if="videoState.isShowConnecting">连接中
                         <span class="loading loading-bars"></span>
                     </h1>
-                    <video width="100%" ref="video-ele" playsinline muted autoplay />
-                    <video class="absolute top-5 right-4" ref="remote-video-ele" playsinline width="50%" autoplay />
+                    <video width="100%" id="localVideo" ref="video-ele" playsinline muted autoplay />
+                    <video class="absolute top-5 right-4" id="remoteVideo" ref="remote-video-ele" playsinline
+                        width="50%" autoplay />
                     <div class="absolute bottom-10 flex items-center">
                         <button class="btn btn-error btn-circle" @click="handleHangUp">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"

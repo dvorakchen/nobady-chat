@@ -7,7 +7,7 @@ export interface RegisterSocketEventable {
   registerEvent(
     msgType: 'setUser' | 'userOnline' | 'msg' | 'userOffline' | 'signal',
     event: Event
-  ): void
+  ): Promise<void>
 }
 
 export interface SocketSendable {
@@ -36,20 +36,20 @@ export class NetSocket implements RegisterSocketEventable, SocketSendable {
     this.socket.send(data)
   }
 
-  public async registerEvent(
+  public registerEvent(
     msgType: 'setUser' | 'userOnline' | 'msg' | 'userOffline' | 'signal',
     event: Event
-  ) {
+  ): Promise<void> {
     if (!this.inited) {
       return new Promise((resolve, reject) => {
         const handleOnOpen = () => {
           this.receivedEvent.set(msgType, event)
           this.socket.removeEventListener('open', handleOnOpen)
 
-          resolve(void 0)
+          resolve()
         }
 
-        const handleOnError = (ev: any) => {
+        const handleOnError = (_ev: any) => {
           this.socket.removeEventListener('error', handleOnError)
           reject(`register NetSocket Event failure`)
         }
@@ -62,7 +62,7 @@ export class NetSocket implements RegisterSocketEventable, SocketSendable {
     }
 
     return new Promise((resolve) => {
-      resolve(void 0)
+      resolve()
     })
   }
 
@@ -75,10 +75,10 @@ export class NetSocket implements RegisterSocketEventable, SocketSendable {
     if (keys.length !== 1) {
       throw "Type error: msg_type's key count shoud be one"
     }
-
     const entry = this.receivedEvent.get(keys[0])
-
-    entry?.(data.msg_type)
+    if (entry !== undefined) {
+      entry(data.msg_type)
+    }
   }
 }
 

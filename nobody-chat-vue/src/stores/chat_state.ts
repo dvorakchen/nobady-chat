@@ -36,7 +36,6 @@ export const useChatState = defineStore('ChatState', () => {
     register.registerEvent('userOnline', bindUserOnline)
     register.registerEvent('msg', bindMsg)
     register.registerEvent('userOffline', bindUserOffline)
-    register.registerEvent('signal', bindSignal)
   }
 
   function findUsername(id: string): string {
@@ -107,10 +106,6 @@ export const useChatState = defineStore('ChatState', () => {
       talkTo.value = null
     }
     onlineUsers.value = onlineUsers.value.filter((t) => t.id !== id)
-  }
-
-  function bindSignal(data: NetSocketDataType) {
-    // TODO: handle signal
   }
 
   function setTalkTo(user: User) {

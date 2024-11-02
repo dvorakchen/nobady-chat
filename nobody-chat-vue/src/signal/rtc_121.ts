@@ -10,10 +10,10 @@ export class RTC121 implements One2OneSignalServer {
 
   private base: BaseSignal | null = null
 
-  private requestHandler: Handler | null = null
-  private offerHandler: Handler | null = null
-  private answerHandler: Handler | null = null
-  private denyHandler: Handler | null = null
+  private requestHandler: Handler = async () => true
+  private offerHandler: Handler = async () => true
+  private answerHandler: Handler = async () => true
+  private denyHandler: Handler = async () => true
 
   constructor(
     localVideo: Selector,
@@ -28,7 +28,6 @@ export class RTC121 implements One2OneSignalServer {
     this.configPC()
     this.registerHandler()
   }
-
   private get localVideoElement(): HTMLVideoElement | null {
     return document.getElementById(this.localVideo) as HTMLVideoElement | null
   }
@@ -51,20 +50,50 @@ export class RTC121 implements One2OneSignalServer {
     }
 
     this.pc.onnegotiationneeded = async () => {
+      console.log('onnegotiation')
       await this.sendOffer()
+    }
+
+    this.pc.ontrack = (ev) => {
+      this.remoteVideoElement!.srcObject = ev.streams[0]
     }
   }
 
   private registerHandler() {
-    this.ss.registerEvent('requestVideo', (si) => this.requestHandler?.(si))
-    this.ss.registerEvent('offer', (si) => this.offerHandler?.(si))
-    this.ss.registerEvent('answer', (si) => this.answerHandler?.(si))
-    this.ss.registerEvent('deny', (si) => this.denyHandler?.(si))
-    this.ss.registerEvent('newCandidate', (si) => {
+    this.ss.registerEvent('requestVideo', async (si) => {
+      if (!(await this.requestHandler(si))) {
+        return
+      }
+
+      // received request and allowed
+      // apply a offer
+      await this.sendOffer()
+    })
+    this.ss.registerEvent('offer', async (si) => {
+      if (!(await this.offerHandler(si))) {
+        return
+      }
+      console.warn('handle offer')
+      const sdp = new RTCSessionDescription(JSON.parse(si.value))
+      console.warn('prepare sendAnswer')
+      await this.sendAnswer({ sdp })
+    })
+    this.ss.registerEvent('answer', async (si) => {
+      if (!(await this.answerHandler(si))) {
+        return
+      }
+
+      const sdp = JSON.parse(si.value)
+      await this.pc.setRemoteDescription(new RTCSessionDescription(sdp))
+    })
+    this.ss.registerEvent('deny', async (si) => {
+      if (!(await this.denyHandler(si))) {
+        return
+      }
+    })
+    this.ss.registerEvent('newCandidate', async (si) => {
       const candidate = JSON.parse(si.value)
-      ;(async () => {
-        await this.pc.addIceCandidate(new RTCIceCandidate(candidate))
-      })()
+      await this.pc.addIceCandidate(new RTCIceCandidate(candidate))
     })
   }
 
@@ -72,7 +101,8 @@ export class RTC121 implements One2OneSignalServer {
     this.base = base
   }
 
-  sendRequest(): void {
+  async sendRequest(): Promise<void> {
+    await getMediaStreamPermission()
     this.ss.sendSignalRequest(this.base!.from_id, this.base!.to_id)
   }
   async sendOffer(): Promise<void> {
@@ -92,17 +122,21 @@ export class RTC121 implements One2OneSignalServer {
   }
 
   async sendAnswer(base: BaseSdp): Promise<void> {
+    console.warn('in sendAnswer')
     const stream = await getMediaStreamPermission()
-    if (stream === null || this.remoteVideoElement === null) {
+    if (stream === null || this.localVideoElement === null) {
       this.sendDeny()
       return
     }
 
-    this.remoteVideoElement.srcObject = stream
-    await this.pc.setRemoteDescription(new RTCSessionDescription(base.sdp))
+    console.warn('after get stream')
+    this.localVideoElement.srcObject = stream
+    stream.getTracks().forEach((track) => this.pc.addTrack(track, stream))
+    await this.pc.setRemoteDescription(base.sdp)
+    console.warn('remoteDesc')
 
-    await this.pc.setLocalDescription()
-    const sdp = this.pc.localDescription
+    let sdp = await this.pc.createAnswer()
+    await this.pc.setLocalDescription(sdp)
 
     this.ss.sendSignalAnswer(this.base!.from_id, this.base!.to_id, JSON.stringify(sdp))
   }
@@ -121,17 +155,32 @@ export class RTC121 implements One2OneSignalServer {
     this.answerHandler = handler
   }
   handleDeny(handler: Handler): void {
-    this.denyHandler = (_handler) => {
+    this.denyHandler = async (_handler) => {
       handler(_handler)
-      if (this.localVideoElement !== null) {
+      if (this.localVideoElement && this.localVideoElement.srcObject) {
         const stream = this.localVideoElement.srcObject as MediaStream
         stream.getTracks().forEach((track) => track.stop())
       }
-      if (this.remoteVideoElement !== null) {
+      if (this.remoteVideoElement && this.remoteVideoElement.srcObject) {
         const stream = this.remoteVideoElement.srcObject as MediaStream
         stream.getTracks().forEach((track) => track.stop())
       }
+      return true
     }
+  }
+  async stop(): Promise<void> {
+    if (this.localVideoElement && this.localVideoElement.srcObject) {
+      const stream = this.localVideoElement.srcObject as MediaStream
+      stream.getTracks().forEach((track) => track.stop())
+      this.localVideoElement.srcObject = null
+    }
+    if (this.remoteVideoElement && this.remoteVideoElement.srcObject) {
+      const stream = this.remoteVideoElement.srcObject as MediaStream
+      stream.getTracks().forEach((track) => track.stop())
+      this.remoteVideoElement.srcObject = null
+    }
+
+    this.sendDeny()
   }
 }
 

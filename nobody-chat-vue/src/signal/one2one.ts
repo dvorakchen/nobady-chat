@@ -1,5 +1,4 @@
-import type { SignalInfo, SignalType } from '@/models'
-import type { RegisterSocketEventable } from '@/net/netsocket'
+import type { SignalInfo } from '@/models'
 
 export interface One2OneSignalServer {
   localVideo: Selector
@@ -8,10 +7,6 @@ export interface One2OneSignalServer {
   setBase(base: BaseSignal): void
 
   sendRequest(): void
-
-  sendOffer(): void
-
-  sendAnswer(base: BaseSdp): void
 
   sendDeny(): void
 
@@ -22,6 +17,8 @@ export interface One2OneSignalServer {
   handleAnswer(handler: Handler): void
 
   handleDeny(handler: Handler): void
+
+  stop(): void
 }
 
 export type BaseSignal = {
@@ -33,6 +30,6 @@ export type BaseSdp = {
   sdp: RTCSessionDescription
 }
 
-export type Handler = (signal: SignalInfo) => void
+export type Handler = (signal: SignalInfo) => Promise<boolean>
 
 export type Selector = string

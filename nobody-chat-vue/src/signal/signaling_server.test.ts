@@ -25,7 +25,7 @@ describe('test signaling server', () => {
       value: timestamp.toString()
     } as SignalInfo
     const ss: SignalingServer = new NormalSS(fakeSocket)
-    ss.registerEvent('requestVideo', (si) => {
+    ss.registerEvent('requestVideo', async (si) => {
       onEvent = true
       expect(si).not.toBeNull()
       expect(si.from_id).toBe(EXPECTED_SI.from_id)
@@ -49,7 +49,7 @@ describe('test signaling server', () => {
       value: ''
     } as SignalInfo
     const ss: SignalingServer = new NormalSS(fakeSocket)
-    ss.registerEvent('offer', (si) => {
+    ss.registerEvent('offer', async (si) => {
       onEvent = true
       expect(si).not.toBeNull()
       expect(si.from_id).toBe(EXPECTED_SI.from_id)

@@ -8,7 +8,7 @@ import {
 import { useNetSocket } from '@/stores/socket_state'
 
 export interface SignalingServer {
-  registerEvent(type: SignalType, handler: (si: SignalInfo) => void): void
+  registerEvent(type: SignalType, handler: (si: SignalInfo) => Promise<void>): void
   sendSignalDeny(from_id: string, to_id: string): void
   sendSignalOffer(from_id: string, to_id: string, sdp: string): void
   sendSignalAnswer(from_id: string, to_id: string, sdp: string): void
@@ -20,28 +20,30 @@ export interface SignalingServer {
  * normal signaling server communication
  */
 export class NormalSS implements SignalingServer {
-  private events = new Map<SignalType, (si: SignalInfo) => void>()
+  private events = new Map<SignalType, (si: SignalInfo) => Promise<void>>()
   private socket: RegisterSocketEventable & SocketSendable
 
   constructor(socket: RegisterSocketEventable & SocketSendable = useNetSocket().netSocket) {
     this.socket = socket
-
-    this.socket.registerEvent('signal', (entry) => {
-      entry = entry as Signal
-      this.handleEvent(entry.signal)
-    })
+    ;(async () => {
+      await socket.registerEvent('signal', async (entry) => {
+        entry = entry as Signal
+        await this.handleEvent(entry.signal)
+      })
+    })()
   }
 
-  private handleEvent(si: SignalInfo) {
+  private async handleEvent(si: SignalInfo) {
+    console.warn(si.signal_type)
     const ev = this.events.get(si.signal_type)
     if (!ev) {
       return
     }
 
-    ev(si)
+    await ev(si)
   }
 
-  registerEvent(type: SignalType, handler: (si: SignalInfo) => void): void {
+  registerEvent(type: SignalType, handler: (si: SignalInfo) => Promise<void>): void {
     this.events.set(type, handler)
   }
   sendSignalDeny(from_id: string, to_id: string) {

@@ -1,7 +1,6 @@
 import { NetSocket, NetSocketSendData } from '@/net/netsocket'
 import { defineStore } from 'pinia'
 import { useChatState } from '@/stores/chat_state'
-import { useVideoState } from './video_state'
 
 export const useNetSocket = defineStore('netSocket', {
   state: () => ({
@@ -10,10 +9,8 @@ export const useNetSocket = defineStore('netSocket', {
   actions: {
     bindSocket() {
       const chatState = useChatState()
-      const videoState = useVideoState()
 
       chatState.bindSocket(this.netSocket)
-      videoState.bindSocket(this.netSocket)
     },
 
     sendTalkTo(to: string, msg: string) {
