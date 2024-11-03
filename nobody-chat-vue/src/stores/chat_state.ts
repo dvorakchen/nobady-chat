@@ -31,11 +31,11 @@ export const useChatState = defineStore('ChatState', () => {
   const historyRecords = ref<HistoryRecords>(new HistoryRecords())
   const talkTo = ref<TalkTo | null>(null)
 
-  function bindSocket(register: RegisterSocketEventable) {
-    register.registerEvent('setUser', bindSetUser)
-    register.registerEvent('userOnline', bindUserOnline)
-    register.registerEvent('msg', bindMsg)
-    register.registerEvent('userOffline', bindUserOffline)
+  async function bindSocket(register: RegisterSocketEventable) {
+    await register.registerEvent('setUser', bindSetUser)
+    await register.registerEvent('userOnline', bindUserOnline)
+    await register.registerEvent('msg', bindMsg)
+    await register.registerEvent('userOffline', bindUserOffline)
   }
 
   function findUsername(id: string): string {

@@ -44,6 +44,7 @@ export class RTC121 implements One2OneSignalServer {
         return
       }
 
+      console.log('new candidate')
       this.ss.sendSignalCandidate(
         this.base!.from_id,
         this.base!.to_id,
@@ -62,12 +63,12 @@ export class RTC121 implements One2OneSignalServer {
   }
 
   private cleanICECandidateBuffer() {
-    if (this.pc.remoteDescription) {
-      console.log('clear')
-      this.iceCandidateBuffer.forEach((c) => {
-        this.pc.addIceCandidate(c)
-      })
-    }
+    // if (this.pc.remoteDescription) {
+    //   console.log('clear')
+    //   this.iceCandidateBuffer.forEach((c) => {
+    //     this.pc.addIceCandidate(c)
+    //   })
+    // }
   }
 
   private registerHandler() {
@@ -104,15 +105,17 @@ export class RTC121 implements One2OneSignalServer {
     })
     this.ss.registerEvent('newCandidate', async (si) => {
       const candidate = new RTCIceCandidate(JSON.parse(si.value))
-
+      console.log('add candidate')
+      // if (this.pc.remoteDescription) {
       if (this.pc.remoteDescription) {
         await this.pc.addIceCandidate(candidate)
-        this.iceCandidateBuffer.forEach((c) => {
-          this.pc.addIceCandidate(c)
-        })
-      } else {
-        this.iceCandidateBuffer.push(candidate)
       }
+      //   this.iceCandidateBuffer.forEach((c) => {
+      //     this.pc.addIceCandidate(c)
+      //   })
+      // } else {
+      //   this.iceCandidateBuffer.push(candidate)
+      // }
     })
   }
 
@@ -121,10 +124,12 @@ export class RTC121 implements One2OneSignalServer {
   }
 
   async sendRequest(): Promise<void> {
+    console.log('send request')
     await getMediaStreamPermission()
     this.ss.sendSignalRequest(this.base!.from_id, this.base!.to_id)
   }
   async sendOffer(): Promise<void> {
+    console.log('send offer')
     const stream = await getMediaStreamPermission()
     if (stream === null || this.localVideoElement === null) {
       this.sendDeny()

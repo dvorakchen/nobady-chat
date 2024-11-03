@@ -14,12 +14,11 @@ const chatState = useChatState();
 let socketState = useNetSocket();
 
 onMounted(async () => {
-  socketState.bindSocket();
+  await socketState.bindSocket();
 
   const users = await getOnlineUsers()
   const onlineUsers = users.map(u => ({ id: u.id, name: u.name, unread: 0 } as OnlineUserModel))
   chatState.appendOnlineUsers(...onlineUsers);
-
 })
 
 const allUnread = computed(() => {

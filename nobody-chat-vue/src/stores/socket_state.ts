@@ -7,10 +7,10 @@ export const useNetSocket = defineStore('netSocket', {
     netSocket: new NetSocket()
   }),
   actions: {
-    bindSocket() {
+    async bindSocket() {
       const chatState = useChatState()
 
-      chatState.bindSocket(this.netSocket)
+      await chatState.bindSocket(this.netSocket)
     },
 
     sendTalkTo(to: string, msg: string) {
