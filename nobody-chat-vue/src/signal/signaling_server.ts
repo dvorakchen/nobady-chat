@@ -34,7 +34,6 @@ export class NormalSS implements SignalingServer {
   }
 
   private async handleEvent(si: SignalInfo) {
-    console.warn(si.signal_type)
     const ev = this.events.get(si.signal_type)
     if (!ev) {
       return

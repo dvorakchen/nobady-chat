@@ -5,9 +5,11 @@ import { useChatState } from './chat_state'
 import { Alert, Notification, useMsgState } from './message_state'
 import type { BaseSignal, One2OneSignalServer, Selector } from '@/signal/one2one'
 import { RTC121 } from '@/signal/rtc_121'
+import { RTC121_2 } from '@/signal/rtc_121_2'
 
 export const useVideoState = defineStore('videoState', () => {
-  const rtc: One2OneSignalServer = new RTC121('localVideo', 'remoteVideo')
+  const rtc: One2OneSignalServer = new RTC121_2('localVideo', 'remoteVideo')
+  // const rtc: One2OneSignalServer = new RTC121('localVideo', 'remoteVideo')
   const to = ref(null as null | User)
   let state = ref('free' as VideoState)
 
@@ -111,7 +113,7 @@ export const useVideoState = defineStore('videoState', () => {
     rtc.remoteVideo = remote
   }
 
-  function requestVideoCommunicate() {
+  async function requestVideoCommunicate() {
     const msgState = useMsgState()
     rtc.setBase({ from_id: user.value.id, to_id: to.value!.id } as BaseSignal)
     if (state.value !== 'free') {
@@ -119,7 +121,7 @@ export const useVideoState = defineStore('videoState', () => {
       return
     }
     state.value = 'waitOffering'
-    rtc.sendRequest()
+    await rtc.sendRequest()
 
     // requestTimer = setTimeout(() => {
     //   msgState.pushNotification(new Notification('请求视频通讯超时'))

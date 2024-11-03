@@ -107,9 +107,9 @@ export class RTC121 implements One2OneSignalServer {
       const candidate = new RTCIceCandidate(JSON.parse(si.value))
       console.log('add candidate')
       // if (this.pc.remoteDescription) {
-      if (this.pc.remoteDescription) {
-        await this.pc.addIceCandidate(candidate)
-      }
+      // if (this.pc.remoteDescription) {
+      await this.pc.addIceCandidate(candidate)
+      // }
       //   this.iceCandidateBuffer.forEach((c) => {
       //     this.pc.addIceCandidate(c)
       //   })

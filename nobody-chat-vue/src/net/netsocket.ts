@@ -22,9 +22,11 @@ export class NetSocket implements RegisterSocketEventable, SocketSendable {
   constructor(socket: WebSocket = newConnection()) {
     this.socket = socket
 
-    this.socket.onmessage = async (ev) => {
+    this.socket.onmessage = (ev) => {
       const data: NetSocketRecvData = JSON.parse(ev.data)
+      console.log('onmessage: ', Object.keys(data.msg_type)[0], ' start')
       this.distributeReceEvent(data)
+      console.log('onmessage: ', Object.keys(data.msg_type)[0], ' end')
     }
 
     this.socket.onopen = () => {
@@ -66,7 +68,7 @@ export class NetSocket implements RegisterSocketEventable, SocketSendable {
     })
   }
 
-  private async distributeReceEvent(data: NetSocketRecvData) {
+  private distributeReceEvent(data: NetSocketRecvData) {
     if (data.msg_type === undefined) {
       return
     }
@@ -75,10 +77,11 @@ export class NetSocket implements RegisterSocketEventable, SocketSendable {
     if (keys.length !== 1) {
       throw "Type error: msg_type's key count shoud be one"
     }
-    console.log('netsocket: ', keys[0])
     const entry = this.receivedEvent.get(keys[0])
     if (entry !== undefined) {
-      await entry(data.msg_type)
+      console.log('distribute start: ', keys[0], ' -- ', (data.msg_type as any).signal?.signal_type)
+      entry(data.msg_type)
+      console.log('distribute end: ', keys[0], ' -- ', (data.msg_type as any).signal?.signal_type)
     }
   }
 }
