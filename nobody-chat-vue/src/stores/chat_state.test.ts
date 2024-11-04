@@ -32,13 +32,13 @@ describe('test socket', () => {
     setActivePinia(createPinia())
   })
 
-  it('setUser', () => {
+  it('setUser', async () => {
     const EXPECTED_ID = 'ID'
     const EXPECTED_NAME = 'NAME'
 
     const chatState = useChatState()
     const socket = new FakeSocket()
-    chatState.bindSocket(socket)
+    await chatState.bindSocket(socket)
 
     expect(chatState.user.id).toBe('')
     expect(chatState.user.name).toBe('')
@@ -51,13 +51,13 @@ describe('test socket', () => {
     expect(chatState.onlineUsers.length).toBe(1)
   })
 
-  it('newRecord', () => {
+  it('newRecord', async () => {
     const EXPECTED_FROM_ID = 'FROM'
     const EXPECTED_MSG = 'Message'
 
     const chatState = useChatState()
     const socket = new FakeSocket()
-    chatState.bindSocket(socket)
+    await chatState.bindSocket(socket)
 
     expect(chatState.talkTo).toBeNull()
 
@@ -75,13 +75,13 @@ describe('test socket', () => {
     expect(chatState.talkTo!.records[0][1]).toBe('')
   })
 
-  it('newRecord 2', () => {
+  it('newRecord 2', async () => {
     const EXPECTED_FROM_ID = 'FROM'
     const EXPECTED_MSG = 'Message'
 
     const chatState = useChatState()
     const socket = new FakeSocket()
-    chatState.bindSocket(socket)
+    await chatState.bindSocket(socket)
 
     expect(chatState.talkTo).toBeNull()
     const user = new User()
@@ -99,13 +99,13 @@ describe('test socket', () => {
     expect(chatState.talkTo?.records[0][1]).toBe('')
   })
 
-  it('removeUser self', () => {
+  it('removeUser self', async () => {
     const EXPECTED_ID = 'id'
     const EXPECTED_NAME = 'name'
 
     const chatState = useChatState()
     const socket = new FakeSocket()
-    chatState.bindSocket(socket)
+    await chatState.bindSocket(socket)
 
     socket.emit('setUser', { setUser: { id: EXPECTED_ID, name: EXPECTED_NAME } } as SetUser)
 
@@ -123,7 +123,7 @@ describe('test socket', () => {
     expect(chatState.onlineUsers.length).toBe(1)
   })
 
-  it('userOnline other', () => {
+  it('userOnline other', async () => {
     const EXPECTED_ID_1 = 'id'
     const EXPECTED_NAME_1 = 'name'
     const EXPECTED_ID_2 = 'id2'
@@ -131,7 +131,7 @@ describe('test socket', () => {
 
     const chatState = useChatState()
     const socket = new FakeSocket()
-    chatState.bindSocket(socket)
+    await chatState.bindSocket(socket)
 
     socket.emit('userOnline', {
       userOnline: { id: EXPECTED_ID_1, name: EXPECTED_NAME_1 }
@@ -147,13 +147,13 @@ describe('test socket', () => {
     expect(chatState.onlineUsers.length).toBe(2)
   })
 
-  it('userOffline other', () => {
+  it('userOffline other', async () => {
     const EXPECTED_ID = 'id'
     const EXPECTED_NAME = 'name'
 
     const chatState = useChatState()
     const socket = new FakeSocket()
-    chatState.bindSocket(socket)
+    await chatState.bindSocket(socket)
 
     socket.emit('userOnline', {
       userOnline: { id: EXPECTED_ID, name: EXPECTED_NAME }
