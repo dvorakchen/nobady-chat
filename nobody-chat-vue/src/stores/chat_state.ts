@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { User, type OnlineUser, type RecvMsg } from '@/models'
-import { nextTick, ref, useTemplateRef, type ShallowRef } from 'vue'
+import { User, type OnlineUser } from '@/models'
+import { nextTick, ref } from 'vue'
 import type {
   Msg,
   NetSocketDataType,

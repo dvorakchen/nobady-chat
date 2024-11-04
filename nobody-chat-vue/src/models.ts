@@ -27,3 +27,4 @@ export type SignalType =
   | 'newCandidate' /*  send a new candidate */
   | 'requestVideo' /* send a request video communication */
   | 'deny' /* send deny to deny opposite peer's request */
+  | 'stop' /* stop the connection */

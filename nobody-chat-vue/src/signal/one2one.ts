@@ -10,13 +10,13 @@ export interface One2OneSignalServer {
 
   sendDeny(): void
 
-  handleRequest(handler: Handler): void
+  registerBeforeRequest(handler: Handler): void
 
-  handleOffer(handler: Handler): void
+  registerBeforeOffer(handler: Handler): void
 
-  handleAnswer(handler: Handler): void
+  registerBeforeAnswer(handler: Handler): void
 
-  handleDeny(handler: Handler): void
+  registerBeforeDeny(handler: Handler): void
 
   stop(): void
 }

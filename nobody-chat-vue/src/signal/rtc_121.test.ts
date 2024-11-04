@@ -21,7 +21,7 @@ describe('test rtc_121', () => {
   const fakeSS = new FakeSS()
 
   it('init', () => {
-    const rtc_121 = new RTC121('', '', fakeSS, buildPeerConnection())
+    const rtc_121 = new RTC121('', '', fakeSS)
 
     expect(rtc_121.localVideo).toBe('')
     expect(rtc_121.remoteVideo).toBe('')
@@ -35,10 +35,10 @@ describe('test rtc_121', () => {
     const EXPECTED_VALUE = 'vvvalue'
     let isSet = false
 
-    const rtc_121: One2OneSignalServer = new RTC121('', '', fakeSS, buildPeerConnection())
+    const rtc_121: One2OneSignalServer = new RTC121('', '', fakeSS)
 
     rtc_121.setBase(BASE_SIGNAL)
-    rtc_121.handleRequest(async (signal) => {
+    rtc_121.registerBeforeRequest(async (signal) => {
       expect(signal).not.toBeNull()
       expect(signal.signal_type).toBe('requestVideo')
       expect(signal.from_id).toBe(BASE_SIGNAL.from_id)
@@ -66,10 +66,10 @@ describe('test rtc_121', () => {
     const EXPECTED_VALUE = 'SDP'
     let isSet = false
 
-    const rtc_121: One2OneSignalServer = new RTC121('', '', fakeSS, buildPeerConnection())
+    const rtc_121: One2OneSignalServer = new RTC121('', '', fakeSS)
 
     rtc_121.setBase(BASE_SIGNAL)
-    rtc_121.handleOffer(async (signal) => {
+    rtc_121.registerBeforeOffer(async (signal) => {
       expect(signal).not.toBeNull()
       expect(signal.signal_type).toBe('offer')
       expect(signal.from_id).toBe(BASE_SIGNAL.from_id)
@@ -88,10 +88,6 @@ describe('test rtc_121', () => {
 
     expect(isSet).toBeTruthy()
   })
-})
-
-let buildPeerConnection = vi.fn(() => {
-  return {} as RTCPeerConnection
 })
 
 const FakeSS = vi.fn()

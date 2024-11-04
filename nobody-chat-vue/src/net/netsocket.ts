@@ -256,6 +256,20 @@ export class NetSocketSendData {
     return res
   }
 
+  public static newSignalStop(from_id: string, to_id: string): NetSocketSendData {
+    const res = new NetSocketSendData()
+    res.msg_type = {
+      signal: {
+        from_id,
+        to_id,
+        signal_type: 'stop',
+        value: ''
+      }
+    } as Signal
+
+    return res
+  }
+
   public static newSignalCandidate(
     from_id: string,
     to_id: string,

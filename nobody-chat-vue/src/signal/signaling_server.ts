@@ -14,6 +14,7 @@ export interface SignalingServer {
   sendSignalAnswer(from_id: string, to_id: string, sdp: string): void
   sendSignalCandidate(from_id: string, to_id: string, candidate: string): void
   sendSignalRequest(from_id: string, to_id: string): void
+  sendSignalStop(from_id: string, to_id: string): void
 }
 
 /**
@@ -40,6 +41,11 @@ export class NormalSS implements SignalingServer {
     }
 
     await ev(si)
+  }
+
+  sendSignalStop(from_id: string, to_id: string): void {
+    const data = JSON.stringify(NetSocketSendData.newSignalStop(from_id, to_id))
+    this.socket.send(data)
   }
 
   registerEvent(type: SignalType, handler: (si: SignalInfo) => Promise<void>): void {

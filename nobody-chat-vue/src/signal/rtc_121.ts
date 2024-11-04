@@ -1,232 +1,196 @@
-import { getMediaStreamPermission } from '@/utils'
-import type { BaseSdp, BaseSignal, Handler, One2OneSignalServer, Selector } from './one2one'
+import type { BaseSignal, Handler, One2OneSignalServer } from './one2one'
 import { NormalSS, type SignalingServer } from './signaling_server'
+import { getMediaStreamPermission } from '@/utils'
+import type { SignalInfo } from '@/models'
 
 export class RTC121 implements One2OneSignalServer {
-  localVideo: Selector
-  remoteVideo: Selector
-  private pc: RTCPeerConnection
-  private ss: SignalingServer
-
   private base: BaseSignal | null = null
-
-  private requestHandler: Handler = async () => true
-  private offerHandler: Handler = async () => true
-  private answerHandler: Handler = async () => true
-  private denyHandler: Handler = async () => true
-
-  private iceCandidateBuffer: RTCIceCandidate[] = []
+  private requestHandler = async (_si: SignalInfo) => true
+  private offerHandler = async (_si: SignalInfo) => true
+  private answerHandler = async (_si: SignalInfo) => true
+  private denyHandler = async (_si: SignalInfo) => true
+  private pc: RTCPeerConnection | null = null
 
   constructor(
-    localVideo: Selector,
-    remoteVideo: Selector,
-    ss: SignalingServer = new NormalSS(),
-    pc: RTCPeerConnection = buildPeerConnection()
+    public localVideo: string,
+    public remoteVideo: string,
+    private ss: SignalingServer = new NormalSS()
   ) {
-    this.localVideo = localVideo
-    this.remoteVideo = remoteVideo
-    this.ss = ss
-    this.pc = pc
-    this.configPC()
-    this.registerHandler()
-  }
-  private get localVideoElement(): HTMLVideoElement | null {
-    return document.getElementById(this.localVideo) as HTMLVideoElement | null
-  }
-
-  private get remoteVideoElement(): HTMLVideoElement | null {
-    return document.getElementById(this.remoteVideo) as HTMLVideoElement | null
-  }
-
-  private configPC() {
-    this.pc.onicecandidate = (ev) => {
-      if (!ev.candidate) {
-        return
-      }
-
-      console.log('new candidate')
-      this.ss.sendSignalCandidate(
-        this.base!.from_id,
-        this.base!.to_id,
-        JSON.stringify(ev.candidate)
-      )
-    }
-
-    this.pc.onnegotiationneeded = async () => {
-      console.log('onnegotiation')
-      await this.sendOffer()
-    }
-
-    this.pc.ontrack = (ev) => {
-      this.remoteVideoElement!.srcObject = ev.streams[0]
-    }
-  }
-
-  private cleanICECandidateBuffer() {
-    // if (this.pc.remoteDescription) {
-    //   console.log('clear')
-    //   this.iceCandidateBuffer.forEach((c) => {
-    //     this.pc.addIceCandidate(c)
-    //   })
-    // }
-  }
-
-  private registerHandler() {
     this.ss.registerEvent('requestVideo', async (si) => {
       if (!(await this.requestHandler(si))) {
+        console.log('recv request and reject: ', si)
         return
       }
 
-      // received request and allowed
-      // apply a offer
-      await this.sendOffer()
+      console.log('recv request: ', si)
+      this.prepareOffer()
     })
+
     this.ss.registerEvent('offer', async (si) => {
       if (!(await this.offerHandler(si))) {
         return
       }
-      console.warn('handle offer')
+
+      console.log('recv offer')
+      if (this.pc) {
+        console.error('pc exist')
+        return
+      }
+
+      this.base = { from_id: si.to_id, to_id: si.from_id }
+
+      this.pc = this.createPeerConnection()
       const sdp = new RTCSessionDescription(JSON.parse(si.value))
-      console.warn('prepare sendAnswer')
-      await this.sendAnswer({ sdp })
+      await this.pc.setRemoteDescription(sdp)
+
+      const stream = await getMediaStreamPermission()!
+
+      stream?.getTracks().forEach((t) => this.pc!.addTrack(t, stream))
+
+      this.localVideoElement!.srcObject = stream
+
+      const answer = await this.pc!.createAnswer()
+
+      await this.pc!.setLocalDescription(answer)
+
+      await this.sendAnswer(this.pc!.localDescription!)
     })
+
     this.ss.registerEvent('answer', async (si) => {
       if (!(await this.answerHandler(si))) {
         return
       }
-
-      const sdp = JSON.parse(si.value)
-      await this.pc.setRemoteDescription(new RTCSessionDescription(sdp))
+      console.log('recv answer')
+      const sdp = new RTCSessionDescription(JSON.parse(si.value))
+      this.pc!.setRemoteDescription(sdp)
     })
-    this.ss.registerEvent('deny', async (si) => {
+
+    ss.registerEvent('deny', async (si) => {
       if (!(await this.denyHandler(si))) {
         return
       }
     })
+
     this.ss.registerEvent('newCandidate', async (si) => {
-      const candidate = new RTCIceCandidate(JSON.parse(si.value))
-      console.log('add candidate')
-      // if (this.pc.remoteDescription) {
-      // if (this.pc.remoteDescription) {
-      await this.pc.addIceCandidate(candidate)
-      // }
-      //   this.iceCandidateBuffer.forEach((c) => {
-      //     this.pc.addIceCandidate(c)
-      //   })
-      // } else {
-      //   this.iceCandidateBuffer.push(candidate)
-      // }
+      console.log('recv newCandidate')
+      const can = new RTCIceCandidate(JSON.parse(si.value))
+      this.pc!.addIceCandidate(can)
     })
+
+    ss.registerEvent('stop', async (_si) => {
+      console.log('stop')
+      this.stop()
+    })
+  }
+
+  private get localVideoElement(): HTMLVideoElement | null {
+    return document.getElementById(this.localVideo) as HTMLVideoElement | null
+  }
+  private get remoteVideoElement(): HTMLVideoElement | null {
+    return document.getElementById(this.remoteVideo) as HTMLVideoElement | null
+  }
+
+  private createPeerConnection(): RTCPeerConnection {
+    const pc = new RTCPeerConnection({
+      iceServers: [
+        {
+          urls: [import.meta.env.VITE_TURN_URL],
+          username: import.meta.env.VITE_TURN_USERNAME,
+          credential: import.meta.env.VITE_TURN_CREDENTIAL
+        }
+      ]
+    })
+
+    pc.onicecandidate = (ev) => {
+      console.log('onicecandidate')
+      if (ev.candidate) {
+        this.ss.sendSignalCandidate(
+          this.base!.from_id,
+          this.base!.to_id,
+          JSON.stringify(ev.candidate)
+        )
+      }
+    }
+
+    pc.onnegotiationneeded = async () => {
+      console.log('onnegotiationneed')
+      await pc.setLocalDescription()
+      const sdp = pc.localDescription
+      this.ss.sendSignalOffer(this.base!.from_id, this.base!.to_id, JSON.stringify(sdp))
+      console.log('sent offer')
+    }
+
+    pc.ontrack = (ev) => {
+      console.log('ontrack')
+      if (this.remoteVideoElement) {
+        this.remoteVideoElement.srcObject = ev.streams[0]
+      }
+    }
+
+    return pc
+  }
+
+  private async prepareOffer() {
+    if (this.pc) {
+      console.error('pc exist')
+      return
+    }
+    console.log('prepare offer')
+    this.pc = this.createPeerConnection()
+    const stream = await getMediaStreamPermission()
+    this.localVideoElement!.srcObject = stream
+
+    stream!.getTracks().forEach((t) => this.pc!.addTrack(t, stream!))
+  }
+
+  private async sendAnswer(sdp: RTCSessionDescription) {
+    this.ss.sendSignalAnswer(this.base!.from_id, this.base!.to_id, JSON.stringify(sdp))
   }
 
   setBase(base: BaseSignal): void {
     this.base = base
   }
-
-  async sendRequest(): Promise<void> {
-    console.log('send request')
-    await getMediaStreamPermission()
+  async sendRequest() {
     this.ss.sendSignalRequest(this.base!.from_id, this.base!.to_id)
   }
-  async sendOffer(): Promise<void> {
-    console.log('send offer')
-    const stream = await getMediaStreamPermission()
-    if (stream === null || this.localVideoElement === null) {
-      this.sendDeny()
-      return
-    }
-
-    this.localVideoElement.srcObject = stream
-
-    stream.getTracks().forEach((track) => this.pc.addTrack(track, stream))
-    await this.pc.setLocalDescription()
-    const sdp = this.pc.localDescription
-
-    this.ss.sendSignalOffer(this.base!.from_id, this.base!.to_id, JSON.stringify(sdp))
-  }
-
-  async sendAnswer(base: BaseSdp): Promise<void> {
-    console.warn('in sendAnswer')
-    const stream = await getMediaStreamPermission()
-    if (stream === null || this.localVideoElement === null) {
-      this.sendDeny()
-      return
-    }
-
-    console.warn('after get stream')
-    this.localVideoElement.srcObject = stream
-    stream.getTracks().forEach((track) => this.pc.addTrack(track, stream))
-    await this.pc.setRemoteDescription(base.sdp)
-    console.warn('remoteDesc')
-
-    let sdp = await this.pc.createAnswer()
-    await this.pc.setLocalDescription(sdp)
-
-    this.cleanICECandidateBuffer()
-    this.ss.sendSignalAnswer(this.base!.from_id, this.base!.to_id, JSON.stringify(sdp))
-  }
-
   sendDeny(): void {
     this.ss.sendSignalDeny(this.base!.from_id, this.base!.to_id)
   }
-
-  handleRequest(handler: Handler): void {
+  registerBeforeRequest(handler: Handler): void {
     this.requestHandler = handler
   }
-  handleOffer(handler: Handler): void {
+  registerBeforeOffer(handler: Handler): void {
     this.offerHandler = handler
   }
-  handleAnswer(handler: Handler): void {
+  registerBeforeAnswer(handler: Handler): void {
     this.answerHandler = handler
   }
-  handleDeny(handler: Handler): void {
-    this.denyHandler = async (_handler) => {
-      handler(_handler)
-      if (this.localVideoElement && this.localVideoElement.srcObject) {
-        const stream = this.localVideoElement.srcObject as MediaStream
-        stream.getTracks().forEach((track) => track.stop())
-      }
-      if (this.remoteVideoElement && this.remoteVideoElement.srcObject) {
-        const stream = this.remoteVideoElement.srcObject as MediaStream
-        stream.getTracks().forEach((track) => track.stop())
-      }
-      return true
-    }
+  registerBeforeDeny(handler: Handler): void {
+    this.denyHandler = handler
   }
-  async stop(): Promise<void> {
+  stop(): void {
+    if (this.pc) {
+      this.ss.sendSignalStop(this.base!.from_id, this.base!.to_id)
+    }
+
     if (this.localVideoElement && this.localVideoElement.srcObject) {
-      const stream = this.localVideoElement.srcObject as MediaStream
-      stream.getTracks().forEach((track) => track.stop())
+      ;(this.localVideoElement.srcObject as MediaStream).getTracks().forEach((t) => t.stop())
       this.localVideoElement.srcObject = null
     }
     if (this.remoteVideoElement && this.remoteVideoElement.srcObject) {
-      const stream = this.remoteVideoElement.srcObject as MediaStream
-      stream.getTracks().forEach((track) => track.stop())
+      ;(this.remoteVideoElement.srcObject as MediaStream).getTracks().forEach((t) => t.stop())
       this.remoteVideoElement.srcObject = null
     }
 
-    this.sendDeny()
+    if (this.pc) {
+      this.pc.onicecandidate = null
+      this.pc.onnegotiationneeded = null
+      this.pc.ontrack = null
+
+      this.pc.close()
+      this.pc = null
+    }
+
+    this.base = null
   }
-}
-
-export function buildPeerConnection(): RTCPeerConnection {
-  const config = peerConfig()
-
-  const peerConnection = new RTCPeerConnection(config)
-
-  return peerConnection
-}
-
-function peerConfig(): RTCConfiguration {
-  const config = {
-    iceServers: [
-      {
-        urls: [import.meta.env.VITE_TURN_URL],
-        username: import.meta.env.VITE_TURN_USERNAME,
-        credential: import.meta.env.VITE_TURN_CREDENTIAL
-      }
-    ]
-  }
-
-  return config
 }

@@ -4,7 +4,6 @@ import { useVideoState } from '@/stores/video_state';
 
 const videoState = useVideoState();
 
-
 function handleHangUp() {
     videoState.hangUp()
 }

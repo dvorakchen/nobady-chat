@@ -34,9 +34,9 @@ function handleSendMsg() {
     sendMsg.value = '';
 }
 
-async function handleApplyVideo() {
+function handleApplyVideo() {
     videoState.to = chatState.talkTo!.user
-    await videoState.requestVideoCommunicate()
+    videoState.requestVideoCommunicate()
 }
 
 const videoPosition = ref({

@@ -21,10 +21,6 @@ pub enum SignalType {
     NewCandidate,
     /// user requests to video communicate to other user
     RequestVideo,
-    CanAccept,
-    Busying,
-    RequestedFirst,
     Deny,
-    Offering,
-    WaitOffering,
+    Stop,
 }

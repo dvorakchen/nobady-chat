@@ -5,18 +5,16 @@ import { useChatState } from './chat_state'
 import { Alert, Notification, useMsgState } from './message_state'
 import type { BaseSignal, One2OneSignalServer, Selector } from '@/signal/one2one'
 import { RTC121 } from '@/signal/rtc_121'
-import { RTC121_2 } from '@/signal/rtc_121_2'
 
 export const useVideoState = defineStore('videoState', () => {
-  const rtc: One2OneSignalServer = new RTC121_2('localVideo', 'remoteVideo')
-  // const rtc: One2OneSignalServer = new RTC121('localVideo', 'remoteVideo')
+  const rtc: One2OneSignalServer = new RTC121('localVideo', 'remoteVideo')
   const to = ref(null as null | User)
   let state = ref('free' as VideoState)
 
   prepare()
 
   function prepare() {
-    rtc.handleRequest((si) => {
+    rtc.registerBeforeRequest((si) => {
       return new Promise((resolve) => {
         if (si.to_id !== user.value.id) {
           resolve(false)
@@ -58,6 +56,8 @@ export const useVideoState = defineStore('videoState', () => {
             {
               label: '拒绝',
               func(close) {
+                rtc.setBase({ from_id: user.value.id, to_id: si.from_id } as BaseSignal)
+                rtc.sendDeny()
                 resolve(false)
                 close()
               }
@@ -67,7 +67,7 @@ export const useVideoState = defineStore('videoState', () => {
       })
     })
 
-    rtc.handleOffer(async (si) => {
+    rtc.registerBeforeOffer(async (si) => {
       if (si.to_id !== user.value.id) {
         return false
       }
@@ -78,7 +78,7 @@ export const useVideoState = defineStore('videoState', () => {
       return false
     })
 
-    rtc.handleAnswer(async (si) => {
+    rtc.registerBeforeAnswer(async (si) => {
       if (si.to_id !== user.value.id || state.value !== 'offering') {
         return false
       }
@@ -86,7 +86,7 @@ export const useVideoState = defineStore('videoState', () => {
       return true
     })
 
-    rtc.handleDeny(async () => {
+    rtc.registerBeforeDeny(async () => {
       const msgState = useMsgState()
 
       msgState.pushNotification(new Notification('对方拒绝了你'))
@@ -113,7 +113,7 @@ export const useVideoState = defineStore('videoState', () => {
     rtc.remoteVideo = remote
   }
 
-  async function requestVideoCommunicate() {
+  function requestVideoCommunicate() {
     const msgState = useMsgState()
     rtc.setBase({ from_id: user.value.id, to_id: to.value!.id } as BaseSignal)
     if (state.value !== 'free') {
@@ -121,15 +121,11 @@ export const useVideoState = defineStore('videoState', () => {
       return
     }
     state.value = 'waitOffering'
-    await rtc.sendRequest()
-
-    // requestTimer = setTimeout(() => {
-    //   msgState.pushNotification(new Notification('请求视频通讯超时'))
-    //   state = 'free'
-    // }, 5000)
+    rtc.sendRequest()
   }
 
   function hangUp() {
+    rtc.sendDeny()
     rtc.stop()
     state.value = 'free'
   }

@@ -2,13 +2,7 @@ import { describe, expect, it, beforeEach, vi } from 'vitest'
 import { useChatState } from './chat_state'
 import { createPinia, setActivePinia } from 'pinia'
 import { User } from '@/models'
-import type {
-  Msg,
-  NetSocketDataType,
-  RegisterSocketEventable,
-  SetUser,
-  UserOnline
-} from '@/net/netsocket'
+import type { Msg, NetSocketDataType, SetUser, UserOnline } from '@/net/netsocket'
 
 describe('test chat_state setTalkTo', () => {
   beforeEach(() => {
