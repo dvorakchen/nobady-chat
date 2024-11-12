@@ -13,7 +13,7 @@ use serde_json::json;
 use uuid::Uuid;
 
 use crate::{
-    chat::{models::SendData, SendMsg, UserDisconnection},
+    chat::{models::SendData, PlainUser, SendMsg, UserDisconnection},
     models::UserId,
     signal::SignalInfo,
 };
@@ -111,6 +111,9 @@ impl User {
         socket: WebSocket,
         chat_room: ActorRef<ChatRoom>,
     ) -> Result<(), SendError<NewUserConnection>> {
+        let plain_user = PlainUser::new(socket);
+        // let (socket, key) = plain_user.exchange_key().await.unwrap();
+
         let (sender, recv) = socket.split();
 
         let id = Uuid::new_v4().simple().to_string();
