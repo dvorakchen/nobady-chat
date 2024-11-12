@@ -1,6 +1,8 @@
 mod chat_room;
-mod user;
 mod models;
+mod plain_user;
+mod user;
 
 pub use chat_room::*;
+pub use plain_user::*;
 pub use user::*;

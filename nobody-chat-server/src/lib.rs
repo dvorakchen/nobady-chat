@@ -1,3 +1,5 @@
+mod socket;
+mod cipher;
 use std::{io, net::SocketAddr};
 
 use crate::routes::home::{all_online_users, web_socket_connection};

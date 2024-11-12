@@ -34,6 +34,8 @@ pub struct User {
     name: String,
     sender: SplitSink<WebSocket, WsMessage>,
     chat_room: ActorRef<ChatRoom>,
+    // pri_key: [u8; 32]
+    // cipher: Box<dyn EncryptDecrypt>,
 }
 
 impl Actor for User {
@@ -119,6 +121,7 @@ impl User {
             name: name.clone(),
             sender,
             chat_room: chat_room.clone(),
+            // pri_key: None,
         });
 
         actor.attach_stream(recv, (), ());
