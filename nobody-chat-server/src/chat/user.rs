@@ -111,7 +111,7 @@ impl User {
         socket: WebSocket,
         chat_room: ActorRef<ChatRoom>,
     ) -> Result<(), SendError<NewUserConnection>> {
-        let plain_user = PlainUser::new(socket);
+        // let plain_user = PlainUser::new(socket);
         // let (socket, key) = plain_user.exchange_key().await.unwrap();
 
         let (sender, recv) = socket.split();
