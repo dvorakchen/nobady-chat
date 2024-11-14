@@ -249,6 +249,18 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@noble/curves@^1.6.0":
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/@noble/curves/-/curves-1.6.0.tgz#be5296ebcd5a1730fccea4786d420f87abfeb40b"
+  integrity sha512-TlaHRXDehJuRNR9TfZDNQ45mMEd5dwUwmicsafcIX4SsNiqnCHKjE/1alYPd/lDRVhxdhUAlv8uEhMCI5zjIJQ==
+  dependencies:
+    "@noble/hashes" "1.5.0"
+
+"@noble/hashes@1.5.0":
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.5.0.tgz#abadc5ca20332db2b1b2aa3e496e9af1213570b0"
+  integrity sha512-1j6kQFb7QRru7eKN3ZDvRcP13rugwdxZqCjbiAVZfIJwgj2A65UmT4TgARXGlXgnRkORLTDTrO19ZErt7+QXgA==
+
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -384,6 +396,61 @@
   version "0.27.8"
   resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.27.8.tgz#6667fac16c436b5434a387a34dedb013198f6e6e"
   integrity sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==
+
+"@stablelib/aead@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@stablelib/aead/-/aead-2.0.0.tgz#473d19ec0ae8e61b89f7959fdddc3a4789ea9aa6"
+  integrity sha512-U/RMANRxbT/ahIpYsPSiFwDFNjADHdnCFfmo09MO1ai2XmerPAOPtMl0qmX7XVvygnACC6ijKDyHBoT2rGyElg==
+
+"@stablelib/binary@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@stablelib/binary/-/binary-2.0.0.tgz#2f23f6f7d4fe11044f9108925b258a2c71f3c82f"
+  integrity sha512-dHejKHMtq5OtNwDSMcFx+djhixVAnZ76Rqga3WOOKe6KV3NlnE7JBXlmdLIn04G4FxqhRSEx+zkoO4Izdw10ZA==
+  dependencies:
+    "@stablelib/int" "^2.0.0"
+
+"@stablelib/chacha20poly1305@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@stablelib/chacha20poly1305/-/chacha20poly1305-2.0.0.tgz#d1609a2b07b4912ee06e7e55d0c969f3fb589ac0"
+  integrity sha512-jMSRnfQCO4Rzm3M6Cpv4ZoYRMqKAkp7u8Z1x5o+pZ1VGdtGNUTQXdTP3g56Xqx1EVw0r8CC7Ev5+zKX0iJKENQ==
+  dependencies:
+    "@stablelib/aead" "^2.0.0"
+    "@stablelib/binary" "^2.0.0"
+    "@stablelib/chacha" "^2.0.0"
+    "@stablelib/constant-time" "^2.0.0"
+    "@stablelib/poly1305" "^2.0.0"
+    "@stablelib/wipe" "^2.0.0"
+
+"@stablelib/chacha@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@stablelib/chacha/-/chacha-2.0.0.tgz#3a8ff33ba1b9ff1ad7a8edb31f0fa61e02f1d964"
+  integrity sha512-tIk1CmD8L3P3v+ctajtYhEEF8QXTox3UO6NPtcjVQRBTgj1vf4JrHkZ+lJCBPuqas8rmRQHnm9QxIgKj4AfJRg==
+  dependencies:
+    "@stablelib/binary" "^2.0.0"
+    "@stablelib/wipe" "^2.0.0"
+
+"@stablelib/constant-time@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@stablelib/constant-time/-/constant-time-2.0.0.tgz#c9fb4b46ea9294326844463eb2ea95647d375b0a"
+  integrity sha512-I7VCf71/mzsDsfV3xDjbTddxjmWq7+tRGvJgqI0VYWRA9eE6/nsf40wnuYFhzl/Ip0Qf2IqUF79oqV+7H33QWQ==
+
+"@stablelib/int@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@stablelib/int/-/int-2.0.0.tgz#2b19f82c7831e91ed1a00a75cb2f23839c767c9d"
+  integrity sha512-EiSYDisTYKk1wuCqoh7wuBySmE0A1isq7TQbsijQ6XFi6nIAozchgAT7Zv2PCl2iY8BTe0URScC4PdYHOe3Yow==
+
+"@stablelib/poly1305@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@stablelib/poly1305/-/poly1305-2.0.0.tgz#797d284c1ae5721d4ae4491b2450b4a8a8068c71"
+  integrity sha512-bPaqyedMMdyyLRSlBbBfn4lP1b5c+yT0QZ0Kop56YooZx6P6b3bvWPQxtbdqLDf0f20FIDe9Y1xN1OJ3MC0HIQ==
+  dependencies:
+    "@stablelib/constant-time" "^2.0.0"
+    "@stablelib/wipe" "^2.0.0"
+
+"@stablelib/wipe@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@stablelib/wipe/-/wipe-2.0.0.tgz#b4b17fedfad02dbfc7120c10160f2b71a7dadc41"
+  integrity sha512-VBMpCJx8py9j9F5DxV5dGmSSO+vkYDnXHXG4alkfpaD08UTfNTqsQoRlUh5obeqBNHiO+3Iv40GxKpM0gfd5xA==
 
 "@tailwindcss/typography@^0.5.15":
   version "0.5.15"

@@ -2,6 +2,9 @@
 /// Wrapped WebSocket
 
 import type { RecvMsg, SignalInfo, User } from '@/models'
+import { x25519 } from '@noble/curves/ed25519'
+import { ChaChaBuilder, type Cipher, type CipherBuilder } from './cipher'
+import { ArrayTobase64, base64ToArrayBuffer } from '@/utils'
 
 export interface RegisterSocketEventable {
   registerEvent(
@@ -18,24 +21,26 @@ export class NetSocket implements RegisterSocketEventable, SocketSendable {
   private receivedEvent: Map<string, Event> = new Map()
   private socket: WebSocket
   private inited = false
+  private cipher: Cipher | null = null
 
-  constructor(socket: WebSocket = newConnection()) {
+  constructor(
+    socket: WebSocket = newConnection(),
+    private cipherBuilder: CipherBuilder = new ChaChaBuilder()
+  ) {
     this.socket = socket
 
-    this.socket.onmessage = (ev) => {
-      const data: NetSocketRecvData = JSON.parse(ev.data)
-      console.log('onmessage: ', Object.keys(data.msg_type)[0], ' start')
-      this.distributeReceEvent(data)
-      console.log('onmessage: ', Object.keys(data.msg_type)[0], ' end')
-    }
+    this.socket.onmessage = null
 
     this.socket.onopen = () => {
+      this.exchangeSercet()
       this.inited = true
     }
   }
 
   public send(data: string) {
-    this.socket.send(data)
+    let cipher_bytes = this.cipher!.encrypt(data)
+    let cipher_text = ArrayTobase64(cipher_bytes)
+    this.socket.send(cipher_text)
   }
 
   public registerEvent(
@@ -66,6 +71,32 @@ export class NetSocket implements RegisterSocketEventable, SocketSendable {
     return new Promise((resolve) => {
       resolve()
     })
+  }
+
+  private exchangeSercet() {
+    let priKey = x25519.utils.randomPrivateKey()
+    let pubKey = btoa(x25519.getPublicKey(priKey).toString())
+
+    this.socket.send(pubKey)
+
+    this.socket.onmessage = (ev) => {
+      let pubKey = ev.data
+      pubKey = atob(pubKey)
+
+      pubKey = Uint8Array.from(JSON.parse(`[${pubKey}]`))
+      const secretKey = x25519.getSharedSecret(priKey, pubKey)
+      this.cipher = this.cipherBuilder.build(secretKey)
+      this.socket.onmessage = this.readyOnMessage
+    }
+  }
+
+  private readyOnMessage = (ev: MessageEvent<any>) => {
+    let cipher_text = base64ToArrayBuffer(ev.data)
+    const decrypted = this.cipher!.decrypt(cipher_text)
+    const data: NetSocketRecvData = JSON.parse(decrypted)
+    console.log('onmessage: ', Object.keys(data.msg_type)[0], ' start')
+    this.distributeReceEvent(data)
+    console.log('onmessage: ', Object.keys(data.msg_type)[0], ' end')
   }
 
   private distributeReceEvent(data: NetSocketRecvData) {

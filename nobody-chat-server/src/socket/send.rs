@@ -5,13 +5,18 @@ use futures_util::{stream::SplitSink, SinkExt};
 
 pub trait SendMsg {
     async fn send(&mut self, msg: String) -> Result<(), axum::Error>;
+    async fn close(&mut self);
 }
 
-pub struct SinkSendMsg(SplitSink<WebSocket, Message>);
+pub struct SinkSendMsg(pub SplitSink<WebSocket, Message>);
 
 impl SendMsg for SinkSendMsg {
     async fn send(&mut self, msg: String) -> Result<(), axum::Error> {
         self.0.send(Message::Text(msg)).await
+    }
+
+    async fn close(&mut self) {
+        self.0.close().await.unwrap();
     }
 }
 
@@ -21,6 +26,7 @@ pub struct SendSocket<S: SendMsg> {
 }
 
 impl<S: SendMsg> SendSocket<S> {
+    #[allow(dead_code)]
     pub fn new(socket: S, encrypt: impl SplitedEncrypt + 'static) -> Self {
         Self {
             cipher: Box::new(encrypt),
@@ -32,6 +38,10 @@ impl<S: SendMsg> SendSocket<S> {
         let cipher_text = self.cipher.encrypt(text.as_ref());
         let cipher_text = BASE64_STANDARD.encode(cipher_text);
         self.socket.send(cipher_text).await
+    }
+
+    pub async fn close(&mut self) {
+        self.socket.close().await;
     }
 }
 
@@ -59,6 +69,7 @@ mod test_send_socket {
 
         impl SendMsg for MySink {
             async fn send(&mut self, msg: String) -> Result<(), axum::Error>;
+            async fn close(&mut self);
         }
     }
 

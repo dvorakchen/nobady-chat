@@ -1,5 +1,5 @@
 use axum::extract::ws::{Message as WsMessage, WebSocket};
-use futures_util::{stream::SplitSink, SinkExt, StreamExt};
+use futures_util::StreamExt;
 use kameo::{
     actor::ActorRef,
     error::SendError,
@@ -14,8 +14,10 @@ use uuid::Uuid;
 
 use crate::{
     chat::{models::SendData, PlainUser, SendMsg, UserDisconnection},
+    cipher::{chacha::ChaCha, EncryptDecrypt},
     models::UserId,
     signal::SignalInfo,
+    socket::{RecvSocket, SendSocket, SinkSendMsg},
 };
 
 use super::{
@@ -32,10 +34,8 @@ pub struct UserRef {
 pub struct User {
     id: UserId,
     name: String,
-    sender: SplitSink<WebSocket, WsMessage>,
+    sender: SendSocket<SinkSendMsg>,
     chat_room: ActorRef<ChatRoom>,
-    // pri_key: [u8; 32]
-    // cipher: Box<dyn EncryptDecrypt>,
 }
 
 impl Actor for User {
@@ -111,23 +111,28 @@ impl User {
         socket: WebSocket,
         chat_room: ActorRef<ChatRoom>,
     ) -> Result<(), SendError<NewUserConnection>> {
-        // let plain_user = PlainUser::new(socket);
-        // let (socket, key) = plain_user.exchange_key().await.unwrap();
+        let plain_user = PlainUser::new(socket);
+        let (socket, key) = plain_user.exchange_key().await.unwrap();
 
         let (sender, recv) = socket.split();
 
+        let chacha = ChaCha::new(key.to_bytes());
+        let (encrypt, decrypt) = chacha.split();
+        let send_socket = SendSocket::with_split_sink(sender, encrypt);
+        let recv_socket = RecvSocket::new(recv, decrypt);
+
         let id = Uuid::new_v4().simple().to_string();
         debug!("User new id: {id}");
-        let name = Uuid::new_v4().simple().to_string()[..5].to_string();
+        let name = id[..5].to_string();
         let actor = kameo::spawn(Self {
             id: id.clone(),
             name: name.clone(),
-            sender,
+            sender: send_socket,
             chat_room: chat_room.clone(),
             // pri_key: None,
         });
 
-        actor.attach_stream(recv, (), ());
+        actor.attach_stream(recv_socket, (), ());
         let tem_actor = actor.clone();
 
         chat_room
@@ -171,7 +176,7 @@ impl User {
         let data = SendData::new_set_user(self.get_id(), self.get_name());
         let data = json!(data).to_string();
 
-        self.sender.send(WsMessage::Text(data)).await.unwrap();
+        self.sender.send(data).await.unwrap();
     }
 
     async fn handle_recv_msg(&self, raw_msg: String) {
@@ -225,7 +230,7 @@ impl Message<UserOnline> for User {
         let data = SendData::new_user_online(msg.0, msg.1);
         let data = json!(data).to_string();
 
-        self.sender.send(WsMessage::Text(data)).await.unwrap();
+        self.sender.send(data).await.unwrap();
     }
 }
 
@@ -244,7 +249,7 @@ impl Message<UserDisconnection> for User {
         let data = SendData::new_user_offline(msg.0);
         let data = json!(data).to_string();
 
-        self.sender.send(WsMessage::Text(data)).await.unwrap();
+        self.sender.send(data).await.unwrap();
     }
 }
 
@@ -263,7 +268,7 @@ impl Message<SetName> for User {
         let data = SendData::new_set_name(msg.0, msg.1);
         let data = json!(data).to_string();
 
-        self.sender.send(WsMessage::Text(data)).await.unwrap();
+        self.sender.send(data).await.unwrap();
     }
 }
 
@@ -283,7 +288,7 @@ impl Message<NewMsg> for User {
         let data = SendData::new_msg(msg.msg, msg.from);
         let data = json!(data).to_string();
 
-        self.sender.send(WsMessage::Text(data)).await.unwrap();
+        self.sender.send(data).await.unwrap();
     }
 }
 
@@ -298,7 +303,7 @@ impl Message<ForwordSignal> for User {
         if msg.0.to_id == self.id {
             let data = json!(SendData::new_signal_forword(msg.0)).to_string();
 
-            self.sender.send(WsMessage::Text(data)).await.unwrap();
+            self.sender.send(data).await.unwrap();
         }
     }
 }

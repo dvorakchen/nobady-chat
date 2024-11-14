@@ -18,7 +18,7 @@ where
     fn encrypt(&self, data: &[u8]) -> Vec<u8>;
 }
 
-pub trait SplitedDecrypt
+pub trait SplitedDecrypt: Unpin
 where
     Self: Send + Sync,
 {

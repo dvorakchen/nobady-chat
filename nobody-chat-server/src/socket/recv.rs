@@ -4,21 +4,23 @@ use base64::prelude::*;
 use futures_util::{ready, stream::Stream};
 use std::pin::Pin;
 
-pub struct RecvSocket<S: Stream<Item = Result<Message, axum::Error>> + Unpin> {
-    cipher: Box<dyn SplitedDecrypt>,
+pub struct RecvSocket<S: Stream<Item = Result<Message, axum::Error>> + Unpin, C: SplitedDecrypt> {
+    cipher: C,
     socket: S,
 }
 
-impl<S: Stream<Item = Result<Message, axum::Error>> + Unpin> RecvSocket<S> {
-    pub fn new(recv_socket: S, decrytp: impl SplitedDecrypt + 'static) -> Self {
+impl<S: Stream<Item = Result<Message, axum::Error>> + Unpin, C: SplitedDecrypt> RecvSocket<S, C> {
+    pub fn new(recv_socket: S, decrytp: C) -> Self {
         Self {
-            cipher: Box::new(decrytp),
+            cipher: decrytp,
             socket: recv_socket,
         }
     }
 }
 
-impl<S: Stream<Item = Result<Message, axum::Error>> + std::marker::Unpin> Stream for RecvSocket<S> {
+impl<S: Stream<Item = Result<Message, axum::Error>> + std::marker::Unpin, C: SplitedDecrypt> Stream
+    for RecvSocket<S, C>
+{
     type Item = S::Item;
 
     fn poll_next(
@@ -70,7 +72,7 @@ mod test_recv_socket_stream {
         pin_mut!(socket);
 
         let mut recv_socket = RecvSocket {
-            cipher: Box::new(Cipher),
+            cipher: Cipher,
             socket,
         };
 
