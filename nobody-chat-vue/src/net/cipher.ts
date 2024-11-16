@@ -1,3 +1,4 @@
+import { x25519 } from '@noble/curves/ed25519'
 import { ChaCha20Poly1305 } from '@stablelib/chacha20poly1305'
 
 export interface CipherBuilder {
@@ -30,5 +31,29 @@ export class ChaCha implements Cipher {
   decrypt(cipherText: Uint8Array): string {
     const bytes = this.cipher.open(this.nonce, cipherText)!
     return this.decoder.decode(bytes)
+  }
+}
+
+export interface SecretExchange {
+  exchange(socket: WebSocket): Promise<Uint8Array>
+}
+
+export class DHSecretExchange implements SecretExchange {
+  async exchange(socket: WebSocket): Promise<Uint8Array> {
+    let priKey = x25519.utils.randomPrivateKey()
+    let pubKey = btoa(x25519.getPublicKey(priKey).toString())
+
+    socket.send(pubKey)
+
+    return new Promise((resolve) => {
+      socket.onmessage = (ev) => {
+        let pubKey = ev.data
+        pubKey = atob(pubKey)
+
+        pubKey = Uint8Array.from(JSON.parse(`[${pubKey}]`))
+        const secretKey = x25519.getSharedSecret(priKey, pubKey)
+        resolve(secretKey)
+      }
+    })
   }
 }
