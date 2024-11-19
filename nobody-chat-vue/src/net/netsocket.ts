@@ -2,7 +2,6 @@
 /// Wrapped WebSocket
 
 import type { RecvMsg, SignalInfo, User } from '@/models'
-import { x25519 } from '@noble/curves/ed25519'
 import {
   ChaChaBuilder,
   DHSecretExchange,
@@ -84,21 +83,6 @@ export class NetSocket implements RegisterSocketEventable, SocketSendable {
     let secret = await this.exchange.exchange(this.socket)
     this.cipher = this.cipherBuilder.build(secret)
     this.socket.onmessage = this.readyOnMessage
-
-    // let priKey = x25519.utils.randomPrivateKey()
-    // let pubKey = btoa(x25519.getPublicKey(priKey).toString())
-
-    // this.socket.send(pubKey)
-
-    // this.socket.onmessage = (ev) => {
-    //   let pubKey = ev.data
-    //   pubKey = atob(pubKey)
-
-    //   pubKey = Uint8Array.from(JSON.parse(`[${pubKey}]`))
-    //   const secretKey = x25519.getSharedSecret(priKey, pubKey)
-    //   this.cipher = this.cipherBuilder.build(secretKey)
-    //   this.socket.onmessage = this.readyOnMessage
-    // }
   }
 
   private readyOnMessage = (ev: MessageEvent<any>) => {
